@@ -27,13 +27,6 @@ roles = [
 game = MakeGame(seed=123, players=players, factions=factions, roles=roles)
 """.strip()
 
-def GameDir(*, exists=True):
-  return click.Path(dir_okay=True,
-                    file_okay=False,
-                    readable=True,
-                    writable=True,
-                    exists=exists)
-
 @click.group()
 def main():
   pass
@@ -42,7 +35,12 @@ def standard_options(*, game_dir_must_exist=True):
   def decorator(f):
     @main.command()
     @click.option("-v", "--verbose", is_flag=True)
-    @click.option("--game_dir", type=GameDir(exists=game_dir_must_exist))
+    @click.option("--game_dir",
+                  type=click.Path(dir_okay=True,
+                                  file_okay=False,
+                                  readable=True,
+                                  writable=True,
+                                  exists=game_dir_must_exist))
     @functools.wraps(f)
     def wrapper(verbose, *args, **kwargs):
       level = logging.INFO if verbose else logging.WARNING
