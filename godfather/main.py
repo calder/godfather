@@ -90,4 +90,11 @@ def run(game_dir):
 
 @standard_options()
 def log(game_dir):
-  raise NotImplementedError()
+  game_path = os.path.join(game_dir, "game.pickle")
+  if not os.path.isfile(game_path):
+    logging.info("%s missing, aborting." % game_path)
+    return
+  logging.info("Reading log from %s..." % game_path)
+  game = pickle.load(open(game_path, "rb"))
+  if len(game.log) > 0:
+    print(game.log)
