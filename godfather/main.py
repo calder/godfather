@@ -20,13 +20,13 @@ players = [
 
 town = Town()
 mafia = Mafia("Corleones")
-factions = [town, mafia]
 
 roles = [
   Cop(town),
   Doctor(town),
   Goon(mafia),
 ]
+factions = sorted(set([role.faction for role in roles]))
 
 game = new_game(seed=123, players=players, factions=factions, roles=roles)
 """.strip()
