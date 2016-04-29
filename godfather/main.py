@@ -6,15 +6,19 @@ import mafia
 import os
 import pickle
 import pluginbase
+import random
 
 import mafia
 
 SETUP_TEMPLATE = """
-from mafia import *
+import os
+import pickle
 import random
 
-setup_seed = %d
-game_seed = %d
+from mafia import *
+
+setup_seed = %(setup_seed)d
+game_seed = %(game_seed)d
 
 players = [
   "Alice",
@@ -22,7 +26,7 @@ players = [
   "Eve",
 ]
 
-rng = random.Random(seed=setup_seed)
+rng = random.Random(setup_seed)
 rng.shuffle(players)
 
 game   = Game(seed=game_seed)
@@ -31,6 +35,9 @@ mafia  = game.add_faction(Mafia("NSA"))
 cop    = game.add_player(players[0], Cop(town))
 doctor = game.add_player(players[1], Doctor(town))
 goon   = game.add_player(players[2], Goon(town))
+
+path = os.path.dirname(os.path.realpath(__file__))
+pickle.dump(game, open(os.path.join(path, "game.pickle"), "wb"))
 """.strip()
 
 @click.group()
@@ -70,7 +77,10 @@ def init(game_dir):
     logging.info("%s already exists." % setup_path)
   else:
     logging.info("Creating %s..." % setup_path)
-    open(setup_path, "w").write(SETUP_TEMPLATE)
+    open(setup_path, "w").write(SETUP_TEMPLATE % {
+      "setup_seed": random.randint(0, 2**31),
+      "game_seed":  random.randint(0, 2**31),
+    })
 
 @standard_options()
 def run(game_dir):
