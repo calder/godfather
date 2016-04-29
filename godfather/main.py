@@ -90,6 +90,7 @@ def run(game_dir):
 
 @standard_options()
 def log(game_dir):
+  # Print the log if there is one.
   game_path = os.path.join(game_dir, "game.pickle")
   if not os.path.isfile(game_path):
     logging.info("%s missing, aborting." % game_path)
