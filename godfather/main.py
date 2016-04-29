@@ -11,6 +11,10 @@ import mafia
 
 SETUP_TEMPLATE = """
 from mafia import *
+import random
+
+setup_seed = %d
+game_seed = %d
 
 players = [
   "Alice",
@@ -18,17 +22,15 @@ players = [
   "Eve",
 ]
 
-town = Town()
-mafia = Mafia("Corleones")
+rng = random.Random(seed=setup_seed)
+rng.shuffle(players)
 
-roles = [
-  Cop(town),
-  Doctor(town),
-  Goon(mafia),
-]
-factions = sorted(set([role.faction for role in roles]))
-
-game = new_game(seed=123, players=players, factions=factions, roles=roles)
+game   = Game(seed=game_seed)
+town   = game.add_faction(Town())
+mafia  = game.add_faction(Mafia("NSA"))
+cop    = game.add_player(players[0], Cop(town))
+doctor = game.add_player(players[1], Doctor(town))
+goon   = game.add_player(players[2], Goon(town))
 """.strip()
 
 @click.group()
