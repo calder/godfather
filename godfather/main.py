@@ -4,6 +4,10 @@ import functools
 import logging
 import mafia
 import os
+import pickle
+import pluginbase
+
+import mafia
 
 SETUP_TEMPLATE = """
 from mafia import *
@@ -24,7 +28,7 @@ roles = [
   Goon(mafia),
 ]
 
-game = MakeGame(seed=123, players=players, factions=factions, roles=roles)
+game = new_game(seed=123, players=players, factions=factions, roles=roles)
 """.strip()
 
 @click.group()
@@ -35,12 +39,12 @@ def standard_options(*, game_dir_must_exist=True):
   def decorator(f):
     @main.command()
     @click.option("-v", "--verbose", is_flag=True)
-    @click.option("--game_dir",
-                  type=click.Path(dir_okay=True,
-                                  file_okay=False,
-                                  readable=True,
-                                  writable=True,
-                                  exists=game_dir_must_exist))
+    @click.argument("game_dir",
+                    type=click.Path(dir_okay=True,
+                                    file_okay=False,
+                                    readable=True,
+                                    writable=True,
+                                    exists=game_dir_must_exist))
     @functools.wraps(f)
     def wrapper(verbose, *args, **kwargs):
       level = logging.INFO if verbose else logging.WARNING
@@ -52,10 +56,12 @@ def standard_options(*, game_dir_must_exist=True):
   return decorator
 
 @standard_options(game_dir_must_exist=False)
-def create(game_dir):
+def init(game_dir):
+  # Create game directory if it doesn't exist.
   logging.info("Creating %s..." % game_dir)
   os.makedirs(game_dir, exist_ok=True)
 
+  # Create setup.py file if it doesn't exist.
   setup_path = os.path.join(game_dir, "setup.py")
   logging.info("Checking for %s..." % setup_path)
   if os.path.isfile(setup_path):
@@ -66,4 +72,22 @@ def create(game_dir):
 
 @standard_options()
 def run(game_dir):
-  raise NotImplemented
+  # Create game.pickle file if it doesn't exist.
+  setup_path = os.path.join(game_dir, "setup.py")
+  game_path = os.path.join(game_dir, "game.pickle")
+  logging.info("Checking for %s..." % game_path)
+  if os.path.isfile(game_path):
+    logging.info("%s already exists." % game_path)
+  else:
+    logging.info("Loading %s..." % setup_path)
+    plugin_base = pluginbase.PluginBase(package="setup")
+    plugin_source = plugin_base.make_plugin_source(searchpath=[game_dir])
+    setup = plugin_source.load_plugin("setup")
+    if not isinstance(setup.game, mafia.Game):
+      raise click.ClickException("'game' in %s is not a mafia.Game object." % setup_path)
+    logging.info("Creating %s..." % game_path)
+    pickle.dump(setup.game, open(game_path, "wb"))
+
+@standard_options()
+def log(game_dir):
+  raise NotImplementedError()
