@@ -5,10 +5,8 @@ import logging
 import mafia
 import os
 import pickle
-import pluginbase
 import random
-
-import mafia
+import subprocess
 
 SETUP_TEMPLATE = """
 import os
@@ -91,14 +89,16 @@ def run(game_dir):
   if os.path.isfile(game_path):
     logging.info("%s already exists." % game_path)
   else:
-    logging.info("Loading %s..." % setup_path)
-    plugin_base = pluginbase.PluginBase(package="setup")
-    plugin_source = plugin_base.make_plugin_source(searchpath=[game_dir])
-    setup = plugin_source.load_plugin("setup")
-    if not isinstance(setup.game, mafia.Game):
-      raise click.ClickException("'game' in %s is not a mafia.Game object." % setup_path)
-    logging.info("Creating %s..." % game_path)
-    pickle.dump(setup.game, open(game_path, "wb"))
+    logging.info("Running %s..." % setup_path)
+    subprocess.run(["python3", setup_path])
+
+  # Check that game.pickle file is valid.
+  try:
+    game = pickle.load(open(game_path, "rb"))
+    if not isinstance(game, mafia.Game):
+      raise click.ClickException("'%s is not a mafia.Game object." % game_path)
+  except pickle.UnpicklingError:
+    raise click.ClickException("%s is not a valid game file." % game_path)
 
 @standard_options()
 def log(game_dir):
