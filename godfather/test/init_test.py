@@ -1,5 +1,7 @@
+import datetime
 import os
 import pickle
+import pluginbase
 import tempfile
 import uuid
 
@@ -31,10 +33,13 @@ class InitTest(CliTest):
       game_path = os.path.join(game_dir, "game.pickle")
 
       self.godfather(["init", game_dir])
-      self.exec(["python3", setup_path])
 
-      game = pickle.load(open(game_path, "rb"))
-      assert isinstance(game, mafia.Game)
+      plugin_base = pluginbase.PluginBase(package="plugins")
+      plugin_source = plugin_base.make_plugin_source(searchpath=[game_dir])
+      setup = plugin_source.load_plugin("setup")
+      assert isinstance(setup.game, mafia.Game)
+      assert isinstance(setup.night_end, datetime.time)
+      assert isinstance(setup.day_end, datetime.time)
 
   def test_preexisting_setup_py(self):
     """Init should not override setup.py if present."""
