@@ -12,8 +12,14 @@ SETUP_TEMPLATE = """
 import os
 import pickle
 import random
+import sys
 
 from mafia import *
+
+game_path = os.path.dirname(os.path.realpath(__file__))
+if os.path.isfile(game_path):
+  print("Cowardly refusing to overwrite %%s." %% game_path)
+  sys.exit(1)
 
 setup_seed = %(setup_seed)d
 game_seed = %(game_seed)d
@@ -34,8 +40,7 @@ cop    = game.add_player(players[0], Cop(town))
 doctor = game.add_player(players[1], Doctor(town))
 goon   = game.add_player(players[2], Goon(town))
 
-path = os.path.dirname(os.path.realpath(__file__))
-pickle.dump(game, open(os.path.join(path, "game.pickle"), "wb"))
+pickle.dump(game, open(os.path.join(game_path, "game.pickle"), "wb"))
 """.strip()
 
 @click.group()
