@@ -1,4 +1,3 @@
-import argparse
 import click
 import functools
 import logging
@@ -7,7 +6,6 @@ import os
 import pickle
 import pluginbase
 import random
-import subprocess
 
 from .moderator import *
 
@@ -134,6 +132,6 @@ def log(game_dir):
     logging.info("%s missing, aborting." % game_path)
     return
   logging.info("Reading log from %s..." % game_path)
-  game = pickle.load(open(game_path, "rb"))
-  if len(game.log) > 0:
-    print(game.log)
+  moderator = pickle.load(open(game_path, "rb"))
+  if len(moderator.game.log) > 0:
+    print(moderator.game.log)

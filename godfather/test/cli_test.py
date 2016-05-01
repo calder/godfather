@@ -24,7 +24,9 @@ class CliTest(unittest.TestCase):
 
   def exec(self, command):
     """Run a command and assert that it passes."""
-    self.assertEqual(0, subprocess.run(command).returncode)
+    result = subprocess.run(command)
+    result.check_returncode()
+    return result.stdout
 
   def godfather(self, command, *, in_process=True):
     """Run 'godfather [command]' either within the process or in a shell."""
@@ -35,5 +37,6 @@ class CliTest(unittest.TestCase):
       if result.exception:
         raise result.exception
       self.assertEqual(0, result.exit_code)
+      return result.output
     else:
-      self.exec(["python3", "godfather"] + command)
+      return self.exec(["python3", "godfather"] + command)

@@ -1,10 +1,6 @@
-import datetime
-import mafia
 import os
 import pickle
 import pluginbase
-import tempfile
-import uuid
 
 from .cli_test import CliTest
 from ..moderator import *

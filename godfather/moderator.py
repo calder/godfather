@@ -7,3 +7,9 @@ class Moderator(object):
 
   def run(self):
     pass
+
+  def email(self, to, subject, contents):
+    logging.info("Sending email...")
+    logging.info("To: %s" % to)
+    logging.info("Subject: %s" % subject)
+    logging.info("Contents: %s" % contents)
