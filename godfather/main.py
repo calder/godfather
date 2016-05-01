@@ -90,7 +90,8 @@ def init(game_dir):
     })
 
 @standard_options()
-def run(game_dir):
+@click.option("--setup_only", is_flag=True)
+def run(game_dir, setup_only):
   # Create game.pickle if it doesn't exist.
   setup_path = os.path.join(game_dir, "setup.py")
   game_path = os.path.join(game_dir, "game.pickle")
@@ -112,7 +113,7 @@ def run(game_dir):
                           day_end=setup.day_end)
     pickle.dump(moderator, open(game_path, "wb"))
 
-  # Check that game.pickle is valid.
+  # Load game.pickle and check that it's valid.
   try:
     moderator = pickle.load(open(game_path, "rb"))
     if not isinstance(moderator, Moderator):
@@ -121,8 +122,9 @@ def run(game_dir):
     raise click.ClickException("%s is not a valid game file." % game_path)
 
   # Run the Moderator (runs until interrupted).
-  moderator.path = game_path
-  moderator.run()
+  if not setup_only:
+    moderator.path = game_path
+    moderator.run()
 
 @standard_options()
 def log(game_dir):

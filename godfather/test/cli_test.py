@@ -1,11 +1,26 @@
 import click.testing
+import os
 import subprocess
+import tempfile
 import unittest
 
 import godfather.main
 
 class CliTest(unittest.TestCase):
   """Base class for tests of the godfather command line interface."""
+
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.game_dir_tempfile = tempfile.TemporaryDirectory()
+    self.game_dir = self.game_dir_tempfile.name
+
+  @property
+  def game_path(self):
+    return os.path.join(self.game_dir, "game.pickle")
+
+  @property
+  def setup_path(self):
+    return os.path.join(self.game_dir, "setup.py")
 
   def exec(self, command):
     """Run a command and assert that it passes."""
