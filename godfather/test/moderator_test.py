@@ -12,7 +12,7 @@ class ModeratorTest(CliTest):
 
   def setUp(self):
     super().setUp()
-    self.game   = Game()
+    self.game   = Game("LOTR Mafia")
     self.town   = self.game.add_faction(Town())
     self.masons = self.game.add_faction(Masonry("Fellowship", self.town))
     self.mafia  = self.game.add_faction(Mafia("Forces of Darkness"))
@@ -29,10 +29,11 @@ class ModeratorTest(CliTest):
     self.moderator.save  = MagicMock()
     self.moderator.run(setup_only=True)
 
+    subject = "LOTR Mafia: Start"
     assert_equal(self.moderator.email.mock_calls, [
-      call([self.frodo], "Mafia: Start", "You are the Mason Villager."),
-      call([self.sam], "Mafia: Start", "You are the Mason Villager."),
-      call([self.frodo, self.sam], "Mafia: Start", "You are the Fellowship."),
+      call([self.frodo], subject, "You are the Mason Villager."),
+      call([self.sam], subject, "You are the Mason Villager."),
+      call([self.frodo, self.sam], subject, "You are the Fellowship."),
     ])
     assert_equal(self.moderator.save.mock_calls, [call()])
     assert self.moderator.started

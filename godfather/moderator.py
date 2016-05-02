@@ -1,3 +1,4 @@
+import click
 import datetime
 import logging
 import mafia
@@ -59,7 +60,11 @@ class Moderator(object):
           "text": contents,
         })
 
-    logging.info("Result: %s", result)
+    if result.status_code != 200:
+      raise click.ClickException("Failed to send email (status code: %d): %s" %
+                                 (result.status_code, result.text))
+
+    logging.info("Email sent.")
 
   def event_logged(self, event):
     """Called when an event is added to the game log."""
@@ -67,5 +72,5 @@ class Moderator(object):
     logging.info("%s %s" % (prefix, event.colored_str()))
     if event.to:
       to = event.to
-      subject = "%s: %s" % ("Mafia", event.phase)
+      subject = "%s: %s" % (self.game.name, event.phase)
       self.email(to, subject, event.message)

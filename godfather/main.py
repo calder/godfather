@@ -36,7 +36,7 @@ players = [
 ]
 random.Random(setup_seed).shuffle(players)
 
-game   = Game(seed=game_seed)
+game   = Game("Crypto Mafia", seed=game_seed)
 town   = game.add_faction(Town())
 mafia  = game.add_faction(Mafia("NSA"))
 cop    = game.add_player(role=Cop(town), **players[0])
