@@ -34,9 +34,7 @@ players = [
   {"player":"Bob", "email":"bob@google.com"},
   {"player":"Eve", "email":"eve@nsa.gov"},
 ]
-
-rng = random.Random(setup_seed)
-rng.shuffle(players)
+random.Random(setup_seed).shuffle(players)
 
 game   = Game(seed=game_seed)
 town   = game.add_faction(Town())
