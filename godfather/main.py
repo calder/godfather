@@ -27,12 +27,12 @@ night_end = datetime.time(hour=10, minute=00)
 day_end   = datetime.time(hour=12, minute=15)
 
 setup_seed = %(setup_seed)d
-game_seed = %(game_seed)d
+game_seed  = %(game_seed)d
 
 players = [
-  {"player":"Alice", "email":"alice@google.com"},
-  {"player":"Bob", "email":"bob@google.com"},
-  {"player":"Eve", "email":"eve@nsa.gov"},
+  {"player":"Alice", "email":"caldercoalson@gmail.com"},
+  {"player":"Bob", "email":"caldercoalson@gmail.com"},
+  {"player":"Eve", "email":"caldercoalson@gmail.com"},
 ]
 random.Random(setup_seed).shuffle(players)
 
@@ -41,7 +41,7 @@ town   = game.add_faction(Town())
 mafia  = game.add_faction(Mafia("NSA"))
 cop    = game.add_player(role=Cop(town), **players[0])
 doctor = game.add_player(role=Doctor(town), **players[1])
-goon   = game.add_player(role=Goon(town), **players[2])
+goon   = game.add_player(role=Goon(mafia), **players[2])
 """.strip()
 
 @click.group()
@@ -82,13 +82,22 @@ def init(game_dir):
   else:
     logging.info("Creating %s..." % setup_path)
     open(setup_path, "w").write(SETUP_TEMPLATE % {
-      "setup_seed": random.randint(0, 2**31),
-      "game_seed":  random.randint(0, 2**31),
+      "setup_seed":  random.randint(0, 2**31),
+      "game_seed":   random.randint(0, 2**31),
     })
 
 @standard_options()
 @click.option("--setup_only", is_flag=True)
 def run(game_dir, setup_only):
+  # Get Mailgun key.
+  mailgun_key_path = os.path.expanduser("~/.config/godfather/mailgun_key.txt")
+  logging.info("Checking for %s..." % mailgun_key_path)
+  if (os.path.isfile(mailgun_key_path)):
+    logging.info("Loading %s..." % mailgun_key_path)
+    mailgun_key = open(mailgun_key_path).read().strip()
+  else:
+    raise click.ClickException("Must create %s." % mailgun_key_path)
+
   # Create game.pickle if it doesn't exist.
   setup_path = os.path.join(game_dir, "setup.py")
   game_path = os.path.join(game_dir, "game.pickle")
@@ -107,7 +116,8 @@ def run(game_dir, setup_only):
     moderator = Moderator(game=setup.game,
                           path=game_path,
                           night_end=setup.night_end,
-                          day_end=setup.day_end)
+                          day_end=setup.day_end,
+                          mailgun_key=mailgun_key)
     pickle.dump(moderator, open(game_path, "wb"))
 
   # Load game.pickle and check that it's valid.

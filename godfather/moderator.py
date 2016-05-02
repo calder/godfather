@@ -2,17 +2,19 @@ import datetime
 import logging
 import mafia
 import pickle
+import requests
 import termcolor
 
 class Moderator(object):
-  def __init__(self, *, path, game, night_end, day_end):
-    self.path       = path
-    self.game       = game
-    self.night_end  = night_end
-    self.day_end    = day_end
+  def __init__(self, *, path, game, night_end, day_end, mailgun_key):
+    self.path        = path
+    self.game        = game
+    self.night_end   = night_end
+    self.day_end     = day_end
+    self.mailgun_key = mailgun_key
 
-    self.started    = False
-    self.next_event = datetime.datetime.now() + datetime.timedelta(days=1)
+    self.started     = False
+    self.next_event  = datetime.datetime.now() + datetime.timedelta(days=1)
     self.game.log.on_append(self.event_logged)
 
   def run(self, *, setup_only=False):
@@ -39,12 +41,25 @@ class Moderator(object):
     assert to
     if to == mafia.events.PUBLIC:
       to = self.game.all_players
-    to_str = ", ".join([p.full_str() for p in to])
+    to_emails = [p.full_str() for p in to]
+    to_str = ", ".join(to_emails)
 
     logging.info("Sending email:")
     logging.info("  To:       %s" % to_str)
     logging.info("  Subject:  %s" % subject)
     logging.info("  Contents: %s" % contents)
+
+    result = requests.post(
+        "https://api.mailgun.net/v3/caldercoalson.com/messages",
+        auth=("api", self.mailgun_key),
+        data={
+          "from": "The Godfather <godfather@caldercoalson.com>",
+          "to": to_emails,
+          "subject": subject,
+          "text": contents,
+        })
+
+    logging.info("Result: %s", result)
 
   def event_logged(self, event):
     """Called when an event is added to the game log."""

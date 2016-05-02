@@ -21,7 +21,8 @@ class ModeratorTest(CliTest):
     self.moderator = Moderator(path=self.game_path,
                                game=self.game,
                                night_end=datetime.time(hour=10),
-                               day_end=datetime.time(hour=22))
+                               day_end=datetime.time(hour=22),
+                               mailgun_key="Fake Key")
 
   def test_start(self):
     self.moderator.email = MagicMock()
