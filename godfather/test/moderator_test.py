@@ -1,3 +1,4 @@
+import datetime
 import os
 import pickle
 import pluginbase
@@ -38,3 +39,14 @@ class ModeratorTest(CliTest):
     ])
     assert_equal(self.moderator.save.mock_calls, [call()])
     assert self.moderator.started
+
+  def test_get_next_occurrence(self):
+    now  = datetime.datetime(year=2001, month=1, day=1, hour=11)
+    time = datetime.time(hour=12)
+    next = datetime.datetime(year=2001, month=1, day=1, hour=12)
+    assert_equal(next, self.moderator.get_next_occurrence(now, time))
+
+    now  = datetime.datetime(year=2001, month=1, day=1, hour=13)
+    time = datetime.time(hour=12)
+    next = datetime.datetime(year=2001, month=1, day=2, hour=12)
+    assert_equal(next, self.moderator.get_next_occurrence(now, time))

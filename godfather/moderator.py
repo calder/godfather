@@ -16,8 +16,26 @@ class Moderator(object):
     self.mailgun_key = mailgun_key
 
     self.started     = False
-    self.next_event  = datetime.datetime.now() + datetime.timedelta(days=1)
+    self.phase       = mafia.Night(0)
+    self.phase_end   = self.get_phase_end(start=datetime.datetime.now())
+
     self.game.log.on_append(self.event_logged)
+
+  def get_phase_end(self, start):
+    """Return the end of the current phase that started at <start>."""
+    if   isinstance(self.phase, mafia.Night):
+      return self.get_next_occurrence(start, self.night_end)
+    elif isinstance(self.phase, mafia.Day):
+      return self.get_next_occurrence(start, self.day_end)
+    else:
+      raise click.ClickException("Unknown phase: %s", type(self.phase))
+
+  def get_next_occurrence(self, start, time):
+    """Return the next occurence of time <time> after datetime <start>."""
+    d = start.replace(hour=time.hour, minute=time.minute)
+    if d < start:
+      d = d + datetime.timedelta(days=1)
+    return d
 
   def run(self, *, setup_only=False):
     """Entry point. Blocks until game finishes or an interrupt is received."""
