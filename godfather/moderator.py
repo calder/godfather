@@ -7,9 +7,10 @@ import requests
 import termcolor
 
 class Moderator(object):
-  def __init__(self, *, path, game, night_end, day_end, mailgun_key):
+  def __init__(self, *, path, game, name, night_end, day_end, mailgun_key):
     self.path        = path
     self.game        = game
+    self.name        = name
     self.night_end   = night_end
     self.day_end     = day_end
     self.mailgun_key = mailgun_key
@@ -42,7 +43,7 @@ class Moderator(object):
     assert to
     if to == mafia.events.PUBLIC:
       to = self.game.all_players
-    to_emails = [p.full_str() for p in to]
+    to_emails = ["%s <%s>" % (p.name, p.email) for p in to]
     to_str = ", ".join(to_emails)
 
     logging.info("Sending email:")
@@ -72,5 +73,5 @@ class Moderator(object):
     logging.info("%s %s" % (prefix, event.colored_str()))
     if event.to:
       to = event.to
-      subject = "%s: %s" % (self.game.name, event.phase)
+      subject = "%s: %s" % (self.name, event.phase)
       self.email(to, subject, event.message)

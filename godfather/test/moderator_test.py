@@ -12,7 +12,7 @@ class ModeratorTest(CliTest):
 
   def setUp(self):
     super().setUp()
-    self.game   = Game("LOTR Mafia")
+    self.game   = Game()
     self.town   = self.game.add_faction(Town())
     self.masons = self.game.add_faction(Masonry("Fellowship", self.town))
     self.mafia  = self.game.add_faction(Mafia("Forces of Darkness"))
@@ -20,6 +20,7 @@ class ModeratorTest(CliTest):
     self.sam    = self.game.add_player("Samwise", Villager(self.masons))
     self.moderator = Moderator(path=self.game_path,
                                game=self.game,
+                               name="LOTR Mafia",
                                night_end=datetime.time(hour=10),
                                day_end=datetime.time(hour=22),
                                mailgun_key="Fake Key")

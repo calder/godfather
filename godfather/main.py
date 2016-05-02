@@ -13,6 +13,7 @@ SETUP_TEMPLATE = """
 \"\"\"This file defines the game setup.
 
 It will be imported and the following variables read:
+  game_name: The name of the game as it appears in email subjects.
   night_end: When night actions are resolved.
   day_end:   When lynch votes are resolved.
   game:      A mafia.Game object with the desired setup.
@@ -23,6 +24,7 @@ import datetime
 import random
 from mafia import *
 
+game_name = "Crypto Mafia"
 night_end = datetime.time(hour=10, minute=00)
 day_end   = datetime.time(hour=12, minute=15)
 
@@ -30,18 +32,18 @@ setup_seed = %(setup_seed)d
 game_seed  = %(game_seed)d
 
 players = [
-  {"player":"Alice", "email":"caldercoalson@gmail.com"},
-  {"player":"Bob", "email":"caldercoalson@gmail.com"},
-  {"player":"Eve", "email":"caldercoalson@gmail.com"},
+  PlayerInfo(name="Alice", email="caldercoalson@gmail.com"),
+  PlayerInfo(name="Bob", email="caldercoalson@gmail.com"),
+  PlayerInfo(name="Eve", email="caldercoalson@gmail.com"),
 ]
 random.Random(setup_seed).shuffle(players)
 
-game   = Game("Crypto Mafia", seed=game_seed)
+game   = Game(seed=game_seed)
 town   = game.add_faction(Town())
 mafia  = game.add_faction(Mafia("NSA"))
-cop    = game.add_player(role=Cop(town), **players[0])
-doctor = game.add_player(role=Doctor(town), **players[1])
-goon   = game.add_player(role=Goon(mafia), **players[2])
+cop    = game.add_player(players[0], Cop(town),)
+doctor = game.add_player(players[1], Doctor(town),)
+goon   = game.add_player(players[2], Goon(mafia),)
 """.strip()
 
 @click.group()
@@ -113,8 +115,9 @@ def run(game_dir, setup_only):
       raise click.ClickException("'game' in %s is not a mafia.Game object." % setup_path)
 
     logging.info("Creating %s..." % game_path)
-    moderator = Moderator(game=setup.game,
-                          path=game_path,
+    moderator = Moderator(path=game_path,
+                          game=setup.game,
+                          name=setup.game_name,
                           night_end=setup.night_end,
                           day_end=setup.day_end,
                           mailgun_key=mailgun_key)
