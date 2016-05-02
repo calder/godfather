@@ -18,6 +18,7 @@ It will be imported and the following variables read:
   game:      A mafia.Game object with the desired setup.
 \"\"\"
 
+import collections
 import datetime
 import random
 from mafia import *
@@ -28,10 +29,12 @@ day_end   = datetime.time(hour=12, minute=15)
 setup_seed = %(setup_seed)d
 game_seed = %(game_seed)d
 
+PlayerInfo = namedtuple("PlayerInfo", ["name", "email"])
+
 players = [
-  "Alice",
-  "Bob",
-  "Eve",
+  PlayerInfo(name="Alice", email="alice@google.com"),
+  PlayerInfo(name="Bob", email="bob@google.com"),
+  PlayerInfo(name="Eve", email="eve@nsa.gov"),
 ]
 
 rng = random.Random(setup_seed)
@@ -40,9 +43,9 @@ rng.shuffle(players)
 game   = Game(seed=game_seed)
 town   = game.add_faction(Town())
 mafia  = game.add_faction(Mafia("NSA"))
-cop    = game.add_player(players[0], Cop(town))
-doctor = game.add_player(players[1], Doctor(town))
-goon   = game.add_player(players[2], Goon(town))
+cop    = game.add_player(players[0].name, Cop(town), email=players[0].email)
+doctor = game.add_player(players[1].name, Doctor(town), email=players[1].email)
+goon   = game.add_player(players[2].name, Goon(town), email=players[2].email)
 """.strip()
 
 @click.group()

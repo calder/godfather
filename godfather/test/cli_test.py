@@ -9,8 +9,8 @@ import godfather.main
 class CliTest(unittest.TestCase):
   """Base class for tests of the godfather command line interface."""
 
-  def __init__(self, *args, **kwargs):
-    super().__init__(*args, **kwargs)
+  def setUp(self):
+    super().setUp()
     self.game_dir_tempfile = tempfile.TemporaryDirectory()
     self.game_dir = self.game_dir_tempfile.name
 
