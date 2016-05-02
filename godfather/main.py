@@ -29,12 +29,10 @@ day_end   = datetime.time(hour=12, minute=15)
 setup_seed = %(setup_seed)d
 game_seed = %(game_seed)d
 
-PlayerInfo = namedtuple("PlayerInfo", ["name", "email"])
-
 players = [
-  PlayerInfo(name="Alice", email="alice@google.com"),
-  PlayerInfo(name="Bob", email="bob@google.com"),
-  PlayerInfo(name="Eve", email="eve@nsa.gov"),
+  {"player":"Alice", "email":"alice@google.com"},
+  {"player":"Bob", "email":"bob@google.com"},
+  {"player":"Eve", "email":"eve@nsa.gov"},
 ]
 
 rng = random.Random(setup_seed)
@@ -43,9 +41,9 @@ rng.shuffle(players)
 game   = Game(seed=game_seed)
 town   = game.add_faction(Town())
 mafia  = game.add_faction(Mafia("NSA"))
-cop    = game.add_player(players[0].name, Cop(town), email=players[0].email)
-doctor = game.add_player(players[1].name, Doctor(town), email=players[1].email)
-goon   = game.add_player(players[2].name, Goon(town), email=players[2].email)
+cop    = game.add_player(role=Cop(town), **players[0])
+doctor = game.add_player(role=Doctor(town), **players[1])
+goon   = game.add_player(role=Goon(town), **players[2])
 """.strip()
 
 @click.group()
