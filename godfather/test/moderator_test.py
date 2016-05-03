@@ -27,18 +27,25 @@ class ModeratorTest(CliTest):
                                mailgun_key="Fake Key")
 
   def test_start(self):
-    self.moderator.email = MagicMock()
-    self.moderator.save  = MagicMock()
+    self.moderator.save       = MagicMock()
+    self.moderator.send_email = MagicMock()
     self.moderator.run(setup_only=True)
 
     subject = "LOTR Mafia: Start"
-    assert_equal(self.moderator.email.mock_calls, [
+    assert_equal(self.moderator.send_email.mock_calls, [
       call([self.frodo], subject, "You are the Mason Villager."),
       call([self.sam], subject, "You are the Mason Villager."),
       call([self.frodo, self.sam], subject, "You are the Fellowship."),
     ])
     assert_equal(self.moderator.save.mock_calls, [call()])
     assert self.moderator.started
+
+  # def test_get_emails(self):
+  #   self.moderator.mailgun_key = ""
+  #   self.moderator.last_fetch  = datetime.datetime(year=2016, month=1, day=1)
+  #   emails = self.moderator.get_emails()
+  #   print(emails)
+  #   assert False
 
   def test_get_next_occurrence(self):
     now  = datetime.datetime(year=2001, month=1, day=1, hour=11)

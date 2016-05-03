@@ -1,5 +1,6 @@
 import click
 import datetime
+import json
 import logging
 import mafia
 import pickle
@@ -18,6 +19,7 @@ class Moderator(object):
     self.started     = False
     self.phase       = mafia.Night(0)
     self.phase_end   = self.get_phase_end(start=datetime.datetime.now())
+    self.last_fetch  = datetime.datetime.now()
 
     self.game.log.on_append(self.event_logged)
 
@@ -56,7 +58,7 @@ class Moderator(object):
     """Save the current Moderator state to disk."""
     pickle.dump(self, open(self.path, "wb"))
 
-  def email(self, to, subject, contents):
+  def send_email(self, to, subject, contents):
     """Send an email to a list of players, or everyone if to=PUBLIC."""
     assert to
     if to == mafia.events.PUBLIC:
@@ -79,11 +81,57 @@ class Moderator(object):
           "text": contents,
         })
 
-    if result.status_code != 200:
+    if result.status_code == 200:
+      logging.info("Email sent.")
+    else:
       raise click.ClickException("Failed to send email (status code: %d): %s" %
                                  (result.status_code, result.text))
 
-    logging.info("Email sent.")
+  def get_emails(self):
+    """Return a list of emails received since the last check."""
+    cutoff = datetime.datetime.now() - datetime.timedelta(minutes=1)
+
+    # Fetch message list.
+    response = requests.get(
+      "https://api.mailgun.net/v3/caldercoalson.com/events",
+      auth=("api", self.mailgun_key),
+      params={
+        "event": "stored",
+        "begin": self.last_fetch.timestamp(),
+        "end":   cutoff.timestamp(),
+      }
+    )
+    if response.status_code == 200:
+      logging.debug("GET /events: %d (%s):" % (response.status_code, response.reason))
+      events = response.json()
+      logging.debug(json.dumps(events, indent="  "))
+    else:
+      raise click.ClickException(
+        "%d error (%s) getting events from Mailgun: %s" %
+        (response.status_code, response.reason, response.text))
+
+    message_urls = [event["storage"]["url"] for event in events["items"]
+                    if "godfather@caldercoalson.com" in event["message"]["recipients"]]
+
+    # Fetch message contents.
+    messages = []
+    for url in message_urls:
+      response = requests.get(url, auth=("api", self.mailgun_key))
+      if response.status_code == 200:
+        logging.debug("GET /message: %d (%s):" % (response.status_code, response.reason))
+        message = response.json()
+        logging.debug(json.dumps(message, indent="  "))
+      else:
+        raise click.ClickException(
+          "%d error (%s) getting message from Mailgun: %s" %
+          (response.status_code, response.reason, response.text))
+
+      sender = message["from"]
+      body   = message["stripped-text"]
+      messages.append((sender, body))
+
+    self.last_fetch = cutoff
+    return messages
 
   def event_logged(self, event):
     """Called when an event is added to the game log."""
@@ -92,4 +140,4 @@ class Moderator(object):
     if event.to:
       to = event.to
       subject = "%s: %s" % (self.name, event.phase)
-      self.email(to, subject, event.message)
+      self.send_email(to, subject, event.message)
