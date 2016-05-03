@@ -31,6 +31,7 @@ day_end   = datetime.time(hour=12, minute=15)
 setup_seed = %(setup_seed)d
 game_seed  = %(game_seed)d
 
+PlayerInfo = collections.namedtuple("PlayerInfo", ["name", "email"])
 players = [
   PlayerInfo(name="Alice", email="caldercoalson@gmail.com"),
   PlayerInfo(name="Bob", email="caldercoalson@gmail.com"),
@@ -41,9 +42,9 @@ random.Random(setup_seed).shuffle(players)
 game   = Game(seed=game_seed)
 town   = game.add_faction(Town())
 mafia  = game.add_faction(Mafia("NSA"))
-cop    = game.add_player(players[0], Cop(town),)
-doctor = game.add_player(players[1], Doctor(town),)
-goon   = game.add_player(players[2], Goon(mafia),)
+cop    = game.add_player(players[0].name, Cop(town),    info={"email": players[0].email})
+doctor = game.add_player(players[1].name, Doctor(town), info={"email": players[1].email})
+goon   = game.add_player(players[2].name, Goon(mafia),  info={"email": players[2].email})
 """.strip()
 
 @click.group()

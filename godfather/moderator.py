@@ -17,6 +17,7 @@ class Moderator(object):
     self.mailgun_key = mailgun_key
 
     self.started     = False
+    self.players     = {p.info["email"]: p for p in game.all_players}
     self.phase       = mafia.Night(0)
     self.phase_end   = self.get_phase_end(start=datetime.datetime.now())
     self.last_fetch  = datetime.datetime.now()
@@ -63,7 +64,7 @@ class Moderator(object):
     assert to
     if to == mafia.events.PUBLIC:
       to = self.game.all_players
-    to_emails = ["%s <%s>" % (p.name, p.email) for p in to]
+    to_emails = ["%s <%s>" % (p.name, p.info["email"]) for p in to]
     to_str = ", ".join(to_emails)
 
     logging.info("Sending email:")
@@ -126,9 +127,13 @@ class Moderator(object):
           "%d error (%s) getting message from Mailgun: %s" %
           (response.status_code, response.reason, response.text))
 
-      sender = message["from"]
+      sender = message["sender"]
       body   = message["stripped-text"]
-      messages.append((sender, body))
+
+      if sender in self.players:
+        messages.append((self.players[sender], body))
+      else:
+        logging.info("Discarding message from non-player '%s'." % sender)
 
     self.last_fetch = cutoff
     return messages
@@ -141,3 +146,7 @@ class Moderator(object):
       to = event.to
       subject = "%s: %s" % (self.name, event.phase)
       self.send_email(to, subject, event.message)
+
+  def email_received(self, message):
+    """Called when an email is received from a player."""
+    prefix = termcolor.colored("]]]", "yellow")

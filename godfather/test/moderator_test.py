@@ -17,8 +17,10 @@ class ModeratorTest(CliTest):
     self.town   = self.game.add_faction(Town())
     self.masons = self.game.add_faction(Masonry("Fellowship", self.town))
     self.mafia  = self.game.add_faction(Mafia("Forces of Darkness"))
-    self.frodo  = self.game.add_player("Frodo", Villager(self.masons))
-    self.sam    = self.game.add_player("Samwise", Villager(self.masons))
+    self.frodo  = self.game.add_player("Frodo", Villager(self.masons),
+                                       info={"email": "frodo@shire.gov"})
+    self.sam    = self.game.add_player("Samwise", Villager(self.masons),
+                                       info={"email": "caldercoalson@gmail.com"})
     self.moderator = Moderator(path=self.game_path,
                                game=self.game,
                                name="LOTR Mafia",
