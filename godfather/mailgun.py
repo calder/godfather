@@ -3,15 +3,12 @@ import json
 import logging
 import requests
 
-class Email(object):
-  def __init__(self, *, sender=None, recipients=None, subject=None, body=None):
-    self.sender     = sender
-    self.recipients = recipients
-    self.subject    = subject
-    self.body       = body
+class Email(dict):
+  def __getattr__(self, attr):
+    return self[attr]
 
   def __repr__(self):
-    items = ["%r=%r" % (k, v) for k, v in self.__dict__.items() if v]
+    items = ["%r=%r" % (k, v) for k, v in self.items() if v]
     return "Email(%s)" % ", ".join(items)
 
 class Mailgun(object):
@@ -20,6 +17,10 @@ class Mailgun(object):
     self.sender  = sender
     self.address = address
     self.domain  = domain
+
+  @property
+  def email(self):
+    return "%s@%s" % (self.address, self.domain)
 
   def send_email(self, email):
     """Send an email or raise an exception if unable."""
@@ -31,12 +32,12 @@ class Mailgun(object):
 
     result = requests.post(
         "https://api.mailgun.net/v3/%s/messages" % self.domain,
-        auth=("api", self.mailgun_key),
+        auth=("api", self.api_key),
         data={
-          "from":    "%s <%s@%s>" % (self.sender, self.address, self.domain),
-          "to":      to_emails,
-          "subject": subject,
-          "text":    contents,
+          "from":    "%s <%s>" % (self.sender, self.email),
+          "to":      email.recipients,
+          "subject": email.subject,
+          "text":    email.body,
         })
 
     if result.status_code != 200:
@@ -70,8 +71,8 @@ class Mailgun(object):
     # Fetch message contents
     messages = []
     for event in events["items"]:
-      if "%s@%s" % (self.address, self.domain) not in event["message"]["recipients"]:
-        logging.debug("Discarding message addressed to a different recipient.")
+      if self.email not in event["message"]["recipients"]:
+        logging.debug("Discarding message addressed to '%s'." % event["message"]["recipients"])
         continue
 
       logging.debug("Retrieving email")

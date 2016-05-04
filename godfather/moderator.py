@@ -71,7 +71,7 @@ class Moderator(object):
         logging.info("Game over!")
         return
 
-      time.sleep(60)
+      time.sleep(10)
 
   def save(self):
     """Save the current Moderator state to disk."""
@@ -99,6 +99,7 @@ class Moderator(object):
   def get_emails(self):
     """Return a list of emails received since the last check."""
     cutoff = datetime.datetime.now() - datetime.timedelta(minutes=1)
+    cutoff = min(cutoff, self.phase_end)
 
     messages = []
     for email in self.mailgun.get_emails(self.last_fetch, cutoff):
