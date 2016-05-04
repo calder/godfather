@@ -6,8 +6,10 @@ import time
 import unittest
 import uuid
 
-from unittest.mock import call, MagicMock
+from nose.plugins.attrib import attr
 from mafia import assert_equal
+from unittest.mock import call, MagicMock
+
 from ..mailgun import *
 
 class MailgunTest(unittest.TestCase):
@@ -25,7 +27,7 @@ class MailgunTest(unittest.TestCase):
                             address=str(uuid.uuid4()),
                             domain="caldercoalson.com")
 
-  @nose.plugins.attrib.attr("test-mailgun")
+  @attr("test-mailgun")
   def test_send(self):
     start = datetime.datetime.now()
     self.mailgun1.send_email(Email(

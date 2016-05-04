@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import call, MagicMock
 from .cli_test import *
 from mafia import *
+
 from ..moderator import *
 
 class ModeratorTest(CliTest):
