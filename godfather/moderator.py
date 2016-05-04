@@ -6,6 +6,9 @@ import mafia
 import pickle
 import requests
 import termcolor
+import uuid
+
+from .mailgun import *
 
 class Moderator(object):
   def __init__(self, *, path, game, name, night_end, day_end, mailgun_key):
@@ -14,13 +17,15 @@ class Moderator(object):
     self.name        = name
     self.night_end   = night_end
     self.day_end     = day_end
-    self.mailgun_key = mailgun_key
 
     self.started     = False
     self.players     = {p.info["email"]: p for p in game.all_players}
     self.phase       = mafia.Night(0)
     self.phase_end   = self.get_phase_end(start=datetime.datetime.now())
     self.last_fetch  = datetime.datetime.now()
+    self.mailgun     = Mailgun(api_key=mailgun_key,
+                               address=str(uuid.uuid4()),
+                               domain="caldercoalson.com")
 
     self.game.log.on_append(self.event_logged)
 
@@ -64,76 +69,20 @@ class Moderator(object):
     assert to
     if to == mafia.events.PUBLIC:
       to = self.game.all_players
-    to_emails = ["%s <%s>" % (p.name, p.info["email"]) for p in to]
-    to_str = ", ".join(to_emails)
+    recipients = ["%s <%s>" % (p.name, p.info["email"]) for p in to]
 
-    logging.info("Sending email:")
-    logging.info("  To:       %s" % to_str)
-    logging.info("  Subject:  %s" % subject)
-    logging.info("  Contents: %s" % contents)
-
-    result = requests.post(
-        "https://api.mailgun.net/v3/caldercoalson.com/messages",
-        auth=("api", self.mailgun_key),
-        data={
-          "from": "The Godfather <godfather@caldercoalson.com>",
-          "to": to_emails,
-          "subject": subject,
-          "text": contents,
-        })
-
-    if result.status_code == 200:
-      logging.info("Email sent.")
-    else:
-      raise click.ClickException("Failed to send email (status code: %d): %s" %
-                                 (result.status_code, result.text))
+    self.mailgun.send_email(Email(recipients=recipients, subject=subject, body=body))
 
   def get_emails(self):
     """Return a list of emails received since the last check."""
     cutoff = datetime.datetime.now() - datetime.timedelta(minutes=1)
 
-    # Fetch message list.
-    response = requests.get(
-      "https://api.mailgun.net/v3/caldercoalson.com/events",
-      auth=("api", self.mailgun_key),
-      params={
-        "event": "stored",
-        "begin": self.last_fetch.timestamp(),
-        "end":   cutoff.timestamp(),
-      }
-    )
-    if response.status_code == 200:
-      logging.debug("GET /events: %d (%s):" % (response.status_code, response.reason))
-      events = response.json()
-      logging.debug(json.dumps(events, indent="  "))
-    else:
-      raise click.ClickException(
-        "%d error (%s) getting events from Mailgun: %s" %
-        (response.status_code, response.reason, response.text))
-
-    message_urls = [event["storage"]["url"] for event in events["items"]
-                    if "godfather@caldercoalson.com" in event["message"]["recipients"]]
-
-    # Fetch message contents.
     messages = []
-    for url in message_urls:
-      response = requests.get(url, auth=("api", self.mailgun_key))
-      if response.status_code == 200:
-        logging.debug("GET /message: %d (%s):" % (response.status_code, response.reason))
-        message = response.json()
-        logging.debug(json.dumps(message, indent="  "))
+    for email in self.mailgun.get_emails(self.last_fetch, cutoff):
+      if email.sender in self.players:
+        messages.append(Email(sender=self.players[email.sender], body=email.body))
       else:
-        raise click.ClickException(
-          "%d error (%s) getting message from Mailgun: %s" %
-          (response.status_code, response.reason, response.text))
-
-      sender = message["sender"]
-      body   = message["stripped-text"]
-
-      if sender in self.players:
-        messages.append((self.players[sender], body))
-      else:
-        logging.info("Discarding message from non-player '%s'." % sender)
+        logging.info("Discarding message from non-player '%s'." % email.sender)
 
     self.last_fetch = cutoff
     return messages

@@ -13,6 +13,10 @@ echo
 ! grep -r "debug=True" godfather/*.py godfather/*/*.py \
   || { echo "\nFAIL: Remove leftover 'debug=True's before committing."; exit 1; }
 
+echo
+! grep -r "key-" godfather/*.py godfather/*/*.py \
+  || { echo "\nFAIL: Remove keys before committing."; exit 1; }
+
 GREEN=`tput setaf 2`
 RESET=`tput sgr0`
 echo "Presubmits ${GREEN}PASSED${RESET}.\n"

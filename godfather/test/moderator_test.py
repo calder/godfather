@@ -43,7 +43,6 @@ class ModeratorTest(CliTest):
     assert self.moderator.started
 
   # def test_get_emails(self):
-  #   self.moderator.mailgun_key = ""
   #   self.moderator.last_fetch  = datetime.datetime(year=2016, month=1, day=1)
   #   emails = self.moderator.get_emails()
   #   print(emails)
