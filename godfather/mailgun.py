@@ -15,8 +15,9 @@ class Email(object):
     return "Email(%s)" % ", ".join(items)
 
 class Mailgun(object):
-  def __init__(self, *, api_key, address, domain):
+  def __init__(self, *, api_key, sender, address, domain):
     self.api_key = api_key
+    self.sender  = sender
     self.address = address
     self.domain  = domain
 
@@ -32,7 +33,7 @@ class Mailgun(object):
         "https://api.mailgun.net/v3/%s/messages" % self.domain,
         auth=("api", self.mailgun_key),
         data={
-          "from":    "The Godfather <%s@%s>" % (self.address, self.domain),
+          "from":    "%s <%s@%s>" % (self.sender, self.address, self.domain),
           "to":      to_emails,
           "subject": subject,
           "text":    contents,
@@ -49,7 +50,7 @@ class Mailgun(object):
 
     logging.debug("Retrieving emails from %s to %s." % (start, end))
 
-    # Fetch message list.
+    # Fetch message list
     response = requests.get(
       "https://api.mailgun.net/v3/%s/events" % self.domain,
       auth=("api", self.api_key),
@@ -66,7 +67,7 @@ class Mailgun(object):
 
     events = response.json()
 
-    # Fetch message contents.
+    # Fetch message contents
     messages = []
     for event in events["items"]:
       if "%s@%s" % (self.address, self.domain) not in event["message"]["recipients"]:

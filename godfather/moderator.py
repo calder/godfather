@@ -6,6 +6,7 @@ import mafia
 import pickle
 import requests
 import termcolor
+import time
 import uuid
 
 from .mailgun import *
@@ -24,6 +25,7 @@ class Moderator(object):
     self.phase_end   = self.get_phase_end(start=datetime.datetime.now())
     self.last_fetch  = datetime.datetime.now()
     self.mailgun     = Mailgun(api_key=mailgun_key,
+                               sender="The Godfather",
                                address=str(uuid.uuid4()),
                                domain="caldercoalson.com")
 
@@ -46,23 +48,44 @@ class Moderator(object):
     return d
 
   def run(self, *, setup_only=False):
-    """Entry point. Blocks until game finishes or an interrupt is received."""
-    logging.info("Moderating game...")
+    """Run the game until it finishes or an interrupt is received."""
+    logging.info("Running %s..." % self.name)
+
     if not self.started:
       self.start()
+      self.save()
+
     if setup_only:
       return
+
+    while True:
+      for email in self.get_emails():
+        self.email_received(email)
+
+      if datetime.datetime.now() > self.phase_end:
+        self.advance_phase()
+
+      self.save()
+
+      if self.game.is_game_over():
+        logging.info("Game over!")
+        return
+
+      time.sleep(60)
+
+  def save(self):
+    """Save the current Moderator state to disk."""
+    pickle.dump(self, open(self.path, "wb"))
 
   def start(self):
     """Start the game and send out role emails."""
     logging.info("Starting game...")
     self.game.begin()
     self.started = True
-    self.save()
 
-  def save(self):
-    """Save the current Moderator state to disk."""
-    pickle.dump(self, open(self.path, "wb"))
+  def advance_phase(self):
+    """Resolve the current phase and start the next one."""
+    pass # Placeholder
 
   def send_email(self, to, subject, contents):
     """Send an email to a list of players, or everyone if to=PUBLIC."""
@@ -98,4 +121,6 @@ class Moderator(object):
 
   def email_received(self, message):
     """Called when an email is received from a player."""
-    prefix = termcolor.colored("]]]", "yellow")
+    prefix = termcolor.colored("▶▶▶", "yellow")
+    logging.info("%s %s" % (prefix, message))
+    # Placeholder
