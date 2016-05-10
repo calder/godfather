@@ -11,7 +11,6 @@ from mafia import *
 from ..moderator import *
 
 class ModeratorTest(CliTest):
-
   def setUp(self):
     super().setUp()
     self.game   = Game()
@@ -28,10 +27,21 @@ class ModeratorTest(CliTest):
                                night_end=datetime.time(hour=10),
                                day_end=datetime.time(hour=22),
                                mailgun_key="Fake Key")
+    self.mailgun = MagicMock()
 
-  def test_start(self):
+  def test_send_email(self):
+    pass
+
+  def test_get_emails(self):
+    pass
+
+class ModeratorUnitTest(ModeratorTest):
+  def setUp(self):
+    super().setUp()
     self.moderator.save       = MagicMock()
     self.moderator.send_email = MagicMock()
+
+  def test_start(self):
     self.moderator.run(setup_only=True)
 
     subject = "LOTR Mafia: Start"
@@ -42,12 +52,6 @@ class ModeratorTest(CliTest):
     ])
     assert_equal(self.moderator.save.mock_calls, [call()])
     assert self.moderator.started
-
-  # def test_get_emails(self):
-  #   self.moderator.last_fetch  = datetime.datetime(year=2016, month=1, day=1)
-  #   emails = self.moderator.get_emails()
-  #   print(emails)
-  #   assert False
 
   def test_get_next_occurrence(self):
     now  = datetime.datetime(year=2001, month=1, day=1, hour=11)

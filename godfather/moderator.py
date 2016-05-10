@@ -124,4 +124,3 @@ class Moderator(object):
     """Called when an email is received from a player."""
     prefix = termcolor.colored("▶▶▶", "yellow")
     logging.info("%s %s" % (prefix, message))
-    # Placeholder
