@@ -118,7 +118,7 @@ class Moderator(object):
     if event.to:
       to = event.to
       subject = "%s: %s" % (self.name, event.phase)
-      self.send_email(to, subject, event.message)
+      self.send_email(to, subject, event.full_message)
 
   def email_received(self, message):
     """Called when an email is received from a player."""
