@@ -24,27 +24,35 @@ import datetime
 import random
 from mafia import *
 
+# Basic game settings
 game_name = "Crypto Mafia"
 night_end = datetime.time(hour=10, minute=00)
 day_end   = datetime.time(hour=12, minute=15)
 
+# Random seeds
 setup_seed = %(setup_seed)d
 game_seed  = %(game_seed)d
 
-PlayerInfo = collections.namedtuple("PlayerInfo", ["name", "email"])
+# Helpers
+Player = collections.namedtuple("Player", ["name", "email"])
+def add_player(game, player, role):
+  return game.add_player(player.name, role, info={"email": player.email})
+
+# Player list
 players = [
-  PlayerInfo(name="Alice", email="caldercoalson@gmail.com"),
-  PlayerInfo(name="Bob", email="caldercoalson@gmail.com"),
-  PlayerInfo(name="Eve", email="caldercoalson@gmail.com"),
+  Player(name="Alice", email="alice@gmail.com"),
+  Player(name="Bob", email="bob@gmail.com"),
+  Player(name="Eve", email="eve@gmail.com"),
 ]
 random.Random(setup_seed).shuffle(players)
 
+# Game setup
 game   = Game(seed=game_seed)
 town   = game.add_faction(Town())
 mafia  = game.add_faction(Mafia("NSA"))
-cop    = game.add_player(players[0].name, Cop(town),    info={"email": players[0].email})
-doctor = game.add_player(players[1].name, Doctor(town), info={"email": players[1].email})
-goon   = game.add_player(players[2].name, Goon(mafia),  info={"email": players[2].email})
+cop    = add_player(game, players[0], Cop(town))
+doctor = add_player(game, players[1], Doctor(town))
+goon   = add_player(game, players[2], Goon(mafia))
 """.strip()
 
 @click.group()
