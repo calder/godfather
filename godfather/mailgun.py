@@ -85,7 +85,8 @@ class Mailgun(object):
 
       message = response.json()
       sender  = message["sender"]
+      subject = message["subject"]
       body    = message["stripped-text"]
-      messages.append(Email(sender=sender, body=body))
+      messages.append(Email(sender=sender, subject=subject, body=body))
 
     return messages

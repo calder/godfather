@@ -22,8 +22,8 @@ class Moderator(object):
     self.started     = False
     self.players     = {p.info["email"]: p for p in game.all_players}
     self.phase       = mafia.Night(0)
-    self.phase_end   = self.get_phase_end(start=datetime.datetime.now())
-    self.last_fetch  = datetime.datetime.now()
+    self.phase_end   = self.get_phase_end(start=self.get_time())
+    self.last_fetch  = self.get_time()
     self.mailgun     = Mailgun(api_key=mailgun_key,
                                sender="The Godfather",
                                address=str(uuid.uuid4()),
@@ -47,6 +47,10 @@ class Moderator(object):
       d = d + datetime.timedelta(days=1)
     return d
 
+  def get_time(self):
+    """Return the current time. Overridden in tests."""
+    return datetime.datetime.now()
+
   def run(self, *, setup_only=False):
     """Run the game until it finishes or an interrupt is received."""
     logging.info("Running %s..." % self.name)
@@ -62,7 +66,7 @@ class Moderator(object):
       for email in self.get_emails():
         self.email_received(email)
 
-      if datetime.datetime.now() > self.phase_end:
+      if self.get_time() > self.phase_end:
         self.advance_phase()
 
       self.save()
@@ -71,15 +75,18 @@ class Moderator(object):
         self.end()
         return
 
-      self.sleep()
+      if not self.sleep():
+        return
 
   def save(self):
-    """Save the current Moderator state to disk."""
+    """Save the current Moderator state to disk. Overridden in tests."""
     pickle.dump(self, open(self.path, "wb"))
 
   def sleep(self):
-    """Pause for a short time."""
+    """Pause for a few seconds, and return whether execution should continue.
+    Overridden in tests."""
     time.sleep(10)
+    return True  # TODO: Check for interrupts
 
   def start(self):
     """Start the game and send out role emails."""
@@ -89,8 +96,8 @@ class Moderator(object):
 
   def end(self):
     """End the game and send out congratulation emails."""
-    logging.info("Game over!")
-    winners = mafia.str_player_list(self.game.winners)
+    winners = mafia.str_player_list(self.game.winners())
+    logging.info("Game over! Winners: %s" % winners)
 
     to = self.game.all_players
     subject = "%s: The End" % self.name
@@ -104,7 +111,8 @@ class Moderator(object):
     self.phase = self.phase.next_phase()
 
   def send_email(self, to, subject, body):
-    """Send an email to a list of players, or everyone if to=PUBLIC."""
+    """Send an email to a list of players, or everyone if to=PUBLIC.
+    Overridden in tests."""
     assert to
     if to == mafia.events.PUBLIC:
       to = self.game.all_players
@@ -113,14 +121,17 @@ class Moderator(object):
     self.mailgun.send_email(Email(recipients=recipients, subject=subject, body=body))
 
   def get_emails(self):
-    """Return a list of emails received since the last check."""
-    cutoff = datetime.datetime.now() - datetime.timedelta(minutes=1)
+    """Return a list of emails received since the last check.
+    Overridden in tests."""
+    cutoff = self.get_time() - datetime.timedelta(minutes=1)
     cutoff = min(cutoff, self.phase_end)
 
     messages = []
     for email in self.mailgun.get_emails(self.last_fetch, cutoff):
       if email.sender in self.players:
-        messages.append(Email(sender=self.players[email.sender], body=email.body))
+        messages.append(Email(sender=self.players[email.sender],
+                              subject=email.subject,
+                              body=email.body))
       else:
         logging.info("Discarding message from non-player '%s'." % email.sender)
 
@@ -139,11 +150,11 @@ class Moderator(object):
   def email_received(self, message):
     """Called when an email is received from a player."""
     action = message.body.strip().split("\n")[0].strip(".!?> \t").lower()
-    prefix = termcolor.colored("▶▶▶", "yellow")
+    prefix = termcolor.colored("◀◀◀", "yellow")
     logging.info("%s %s" % (prefix, message))
 
     try:
-      self.phase.add_parsed(action, sender=message.to)
-    except (InvalidAction, e):
-      "%s\n\n> %s" % (str(e), action)
-      self.send_email(message.to, message.subject, body)
+      self.phase.add_parsed(message.sender, action, game=self.game)
+    except mafia.InvalidAction as e:
+      body = "%s\n\n> %s" % (str(e), action)
+      self.send_email(message.sender, message.subject, body)
