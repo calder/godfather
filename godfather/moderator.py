@@ -68,14 +68,18 @@ class Moderator(object):
       self.save()
 
       if self.game.is_game_over():
-        logging.info("Game over!")
+        self.end()
         return
 
-      time.sleep(10)
+      self.sleep()
 
   def save(self):
     """Save the current Moderator state to disk."""
     pickle.dump(self, open(self.path, "wb"))
+
+  def sleep(self):
+    """Pause for a short time."""
+    time.sleep(10)
 
   def start(self):
     """Start the game and send out role emails."""
@@ -83,11 +87,23 @@ class Moderator(object):
     self.game.begin()
     self.started = True
 
+  def end(self):
+    """End the game and send out congratulation emails."""
+    logging.info("Game over!")
+    winners = mafia.str_player_list(self.game.winners)
+
+    to = self.game.all_players
+    subject = "%s: The End" % self.name
+    body = "Game over!\n\nCongratulations to %s for a well " \
+           "(or poorly; I can't tell) played game!" % winners
+    self.send_email(to, subject, body)
+
   def advance_phase(self):
     """Resolve the current phase and start the next one."""
-    pass # Placeholder
+    self.game.resolve(self.phase)
+    self.phase = self.phase.next_phase()
 
-  def send_email(self, to, subject, contents):
+  def send_email(self, to, subject, body):
     """Send an email to a list of players, or everyone if to=PUBLIC."""
     assert to
     if to == mafia.events.PUBLIC:
@@ -122,5 +138,12 @@ class Moderator(object):
 
   def email_received(self, message):
     """Called when an email is received from a player."""
+    action = message.body.strip().split("\n")[0].strip(".!?> \t").lower()
     prefix = termcolor.colored("▶▶▶", "yellow")
     logging.info("%s %s" % (prefix, message))
+
+    try:
+      self.phase.add_parsed(action, sender=message.to)
+    except (InvalidAction, e):
+      "%s\n\n> %s" % (str(e), action)
+      self.send_email(message.to, message.subject, body)

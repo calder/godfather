@@ -4,9 +4,9 @@ import pickle
 import pluginbase
 import unittest
 
-from unittest.mock import call, MagicMock
 from .cli_test import *
 from mafia import *
+from unittest.mock import call, MagicMock
 
 from ..moderator import *
 
@@ -29,6 +29,7 @@ class ModeratorTest(CliTest):
                                day_end=datetime.time(hour=22),
                                mailgun_key="Fake Key")
     self.moderator.mailgun = self.mocks.mailgun = MagicMock()
+    self.moderator.sleep   = self.mocks.sleep   = MagicMock()
 
   def test_send_email(self):
     pass
