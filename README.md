@@ -13,8 +13,13 @@ sudo easy_install3 godfather
 ## Usage
 
 ```sh
+# Create the game directory and a template setup.py.
 godfather init ~/mafia-game
-nano ~/mafia-game/setup.py  # Edit to your heart's content
+
+# Edit setup.py to configure your game.
+nano ~/mafia-game/setup.py
+
+# Run the game. Game state is saved in game.pickle.
 godfather run ~/mafia-game
 ```
 
