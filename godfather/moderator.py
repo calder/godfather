@@ -99,16 +99,16 @@ class Moderator(object):
     winners = mafia.str_player_list(self.game.winners())
     logging.info("Game over! Winners: %s" % winners)
 
-    to = self.game.all_players
     subject = "%s: The End" % self.name
     body = "Game over!\n\nCongratulations to %s for a well " \
            "(or poorly; I can't tell) played game!" % winners
-    self.send_email(to, subject, body)
+    self.send_email(mafia.events.PUBLIC, subject, body)
 
   def advance_phase(self):
     """Resolve the current phase and start the next one."""
     self.game.resolve(self.phase)
     self.phase = self.phase.next_phase()
+    self.phase_end = self.get_phase_end(start=self.get_time())
 
   def send_email(self, to, subject, body):
     """Send an email to a list of players, or everyone if to=PUBLIC.

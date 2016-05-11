@@ -4,7 +4,7 @@ import pickle
 import pluginbase
 import unittest
 
-from callee import StartsWith
+from callee import Glob, StartsWith
 from .cli_test import *
 from mafia import *
 from unittest.mock import ANY, call, MagicMock
@@ -78,28 +78,51 @@ class ModeratorUnitTest(ModeratorTest):
         Email(sender=self.sauron, subject="Mafia", body="Sauron: Kill Frodo."),
       ]
       yield True
+      self.moderator.get_emails.return_value = []
       assert_equal(self.moderator.send_email.mock_calls, [
         call(self.sam, "Mafia", "No actions available.\n\n> protect frodo"),
       ])
+      self.moderator.send_email.reset_mock()
 
       # Pass 3: Advance the clock so night resolves.
       self.moderator.get_time.return_value = self.moderator.phase_end + \
                                              datetime.timedelta(seconds=1)
       yield True
-      night0 = self.game.log[-1].phase
-      assert_equal(self.game.log.phase(night0), mafia.Log([
-        mafia.events.Visited(self.sauron, self.frodo),
-        mafia.events.Died(self.frodo),
-      ], phase=night0))
+      assert_equal(self.moderator.send_email.mock_calls, [
+        call(events.PUBLIC, "LOTR Mafia: Night 0", "Frodo, the Mason Villager, has died."),
+      ])
+      self.moderator.send_email.reset_mock()
+
+      # Pass 4: Send in some vote emails.
+      self.moderator.get_emails.return_value = [
+        Email(sender=self.gandalf, subject="Mafia", body="Vote for Sauron."),
+        Email(sender=self.sam, subject="My Vote", body="vote sauron"),
+        Email(sender=self.sauron, subject="Mafia", body="GRRRRRRRRR"),
+      ]
+      yield True
+      self.moderator.get_emails.return_value = []
+      assert_equal(self.moderator.send_email.mock_calls, [
+        call(self.sauron, "Mafia", StartsWith("Votes must take the form:")),
+      ])
+      self.moderator.send_email.reset_mock()
+
+      # Pass 5: Advance the clock so day resolves.
+      self.moderator.get_time.return_value = self.moderator.phase_end + \
+                                             datetime.timedelta(seconds=1)
+      yield True
+      assert_equal(self.moderator.send_email.mock_calls, [
+        call(events.PUBLIC, "LOTR Mafia: Day 1", "Sauron, the Mafia Godfather, was lynched."),
+        call(events.PUBLIC, "LOTR Mafia: The End", Glob("*Congratulations to Frodo, Gandalf and Samwise*")),
+      ])
+      self.moderator.send_email.reset_mock()
 
       # Exit
-      yield False
       yield "Foobar"
 
-    l = logic()
-    self.moderator.sleep.side_effect = l
+    test_logic = logic()
+    self.moderator.sleep.side_effect = test_logic
     self.moderator.run()
-    assert_equal(next(l), "Foobar")
+    assert_equal(next(test_logic), "Foobar")
 
   def test_get_next_occurrence(self):
     now  = datetime.datetime(year=2001, month=1, day=1, hour=11)
