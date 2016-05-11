@@ -40,6 +40,7 @@ def add_player(game, player, role):
 
 # Player list
 players = [
+  Player(name="Tarl", email="tarl@google.com"),
   Player(name="Alice", email="alice@gmail.com"),
   Player(name="Bob", email="bob@gmail.com"),
   Player(name="Eve", email="eve@gmail.com"),
@@ -47,12 +48,13 @@ players = [
 random.Random(setup_seed).shuffle(players)
 
 # Game setup
-game   = Game(seed=game_seed)
-town   = game.add_faction(Town())
-mafia  = game.add_faction(Mafia("NSA"))
-cop    = add_player(game, players[0], Cop(town))
-doctor = add_player(game, players[1], Doctor(town))
-goon   = add_player(game, players[2], Goon(mafia))
+game     = Game(seed=game_seed)
+town     = game.add_faction(Town())
+mafia    = game.add_faction(Mafia("NSA"))
+cop      = add_player(game, players[0], Cop(town))
+doctor   = add_player(game, players[1], Doctor(town))
+villager = add_player(game, players[2], Villager(town))
+goon     = add_player(game, players[3], Goon(mafia))
 """.strip()
 
 @click.group()
