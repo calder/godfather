@@ -10,6 +10,15 @@ sudo easy_install3 godfather
 ```
 
 
+## Usage
+
+```sh
+godfather init ~/mafia-game
+nano ~/mafia-game/setup.py  # Edit to your heart's content
+godfather run ~/mafia-game
+```
+
+
 ## Contributing
 
 Install dependencies:
