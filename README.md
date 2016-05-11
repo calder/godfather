@@ -21,6 +21,9 @@ nano ~/mafia-game/setup.py
 
 # Run the game. Game state is saved in game.pickle.
 godfather run ~/mafia-game
+
+# View the game log so far.
+godfather log ~/mafia-game
 ```
 
 
