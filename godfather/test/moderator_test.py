@@ -4,9 +4,10 @@ import pickle
 import pluginbase
 import unittest
 
+from callee import StartsWith
 from .cli_test import *
 from mafia import *
-from unittest.mock import call, MagicMock
+from unittest.mock import ANY, call, MagicMock
 
 from ..moderator import *
 
@@ -54,17 +55,13 @@ class ModeratorUnitTest(ModeratorTest):
   def test_start(self):
     self.moderator.run(setup_only=True)
 
-    subject        = "LOTR Mafia: Start"
-    cop_role       = "You are the Town Cop.\n\nYou may investigate one player each night. You discover their alignment. Good means pro-town, Evil means Mafia or Third Party.\n\n---------------------------------------\nYou may send me the following commands:\n- investigate PLAYER"
-    godfather_role = "You are the Mafia Godfather.\n\nYou appear innocent to cop investigations."
-    mason_role     = "You are the Mason Villager.\n\nYou have no special abilities."
-    mason_faction  = "Frodo and Samwise, you are the Fellowship."
+    subject = "LOTR Mafia: Start"
     assert_equal(self.moderator.send_email.mock_calls, [
-      call([self.frodo], subject, mason_role),
-      call([self.gandalf], subject, cop_role),
-      call([self.sam], subject, mason_role),
-      call([self.sauron], subject, godfather_role),
-      call([self.frodo, self.sam], subject, mason_faction),
+      call([self.frodo],   subject, StartsWith("You are the Mason Villager.")),
+      call([self.gandalf], subject, StartsWith("You are the Town Cop.")),
+      call([self.sam],     subject, StartsWith("You are the Mason Villager.")),
+      call([self.sauron],  subject, StartsWith("You are the Mafia Godfather.")),
+      call([self.frodo, self.sam], subject, "Frodo and Samwise, you are the Fellowship."),
     ])
     assert_equal(self.moderator.save.mock_calls, [call()])
     assert self.moderator.started

@@ -14,7 +14,7 @@ sudo easy_install3 godfather
 
 Install dependencies:
 ```sh
-sudo easy_install3 install click mafia nose
+sudo easy_install3 install callee click mafia nose
 ```
 
 Set up presubmit hooks:
