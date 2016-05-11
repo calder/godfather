@@ -48,73 +48,66 @@ class ModeratorTest(CliTest):
 class ModeratorUnitTest(ModeratorTest):
   def setUp(self):
     super().setUp()
+    self.emails = []
     self.moderator.save       = self.mocks.save       = MagicMock()
     self.moderator.send_email = self.mocks.send_email = MagicMock()
     self.moderator.get_emails = self.mocks.get_emails = MagicMock()
+    self.moderator.get_emails.side_effect = self.get_and_clear_emails
 
-  def test_start(self):
-    self.moderator.run(setup_only=True)
+  def get_and_clear_emails(self):
+    emails = self.emails
+    self.emails = []
+    return emails
 
-    subject = "LOTR Mafia: Start"
-    assert_equal(self.moderator.send_email.mock_calls, [
-      call([self.frodo],   subject, StartsWith("You are the Mason Villager.")),
-      call([self.gandalf], subject, StartsWith("You are the Town Cop.")),
-      call([self.sam],     subject, StartsWith("You are the Mason Villager.")),
-      call([self.sauron],  subject, StartsWith("You are the Mafia Godfather.")),
-      call([self.frodo, self.sam], subject, "Frodo and Samwise, you are the Fellowship."),
-    ])
-    assert_equal(self.moderator.save.mock_calls, [call()])
-    assert self.moderator.started
+  def assert_sent_emails(self, calls):
+    assert_equal(self.moderator.send_email.mock_calls, calls)
+    self.moderator.send_email.reset_mock()
 
   def test_simple_game(self):
     def logic():
       # Pass 1: Role and faction emails should be sent.
-      assert_equal(len(self.moderator.send_email.mock_calls), 5)
-      self.moderator.send_email.reset_mock()
+      subject = "LOTR Mafia: Start"
+      self.assert_sent_emails([
+        call([self.frodo],   subject, StartsWith("You are the Mason Villager.")),
+        call([self.gandalf], subject, StartsWith("You are the Town Cop.")),
+        call([self.sam],     subject, StartsWith("You are the Mason Villager.")),
+        call([self.sauron],  subject, StartsWith("You are the Mafia Godfather.")),
+        call([self.frodo, self.sam], subject, "Frodo and Samwise, you are the Fellowship."),
+      ])
+      assert self.moderator.started
 
       # Pass 2: Send in some action emails.
-      self.moderator.get_emails.return_value = [
-        Email(sender=self.sam, subject="Mafia", body="Protect Frodo!"),
-        Email(sender=self.sauron, subject="Mafia", body="Sauron: Kill Frodo."),
-      ]
+      self.emails.append(Email(sender=self.sam, subject="Mafia", body="Protect Frodo!"))
+      self.emails.append(Email(sender=self.sauron, subject="Mafia", body="Sauron: Kill Frodo."))
       yield True
-      self.moderator.get_emails.return_value = []
-      assert_equal(self.moderator.send_email.mock_calls, [
+      self.assert_sent_emails([
         call(self.sam, "Mafia", "No actions available.\n\n> protect frodo"),
       ])
-      self.moderator.send_email.reset_mock()
 
       # Pass 3: Advance the clock so night resolves.
       self.moderator.get_time.return_value = self.moderator.phase_end + \
                                              datetime.timedelta(seconds=1)
       yield True
-      assert_equal(self.moderator.send_email.mock_calls, [
+      self.assert_sent_emails([
         call(events.PUBLIC, "LOTR Mafia: Night 0", "Frodo, the Mason Villager, has died."),
       ])
-      self.moderator.send_email.reset_mock()
 
       # Pass 4: Send in some vote emails.
-      self.moderator.get_emails.return_value = [
-        Email(sender=self.gandalf, subject="Mafia", body="Vote for Sauron."),
-        Email(sender=self.sam, subject="My Vote", body="vote sauron"),
-        Email(sender=self.sauron, subject="Mafia", body="GRRRRRRRRR"),
-      ]
+      self.emails.append(Email(sender=self.sam, subject="My Vote", body="vote sauron"))
+      self.emails.append(Email(sender=self.sauron, subject="Mafia", body="GRRRRRRRRR"))
       yield True
-      self.moderator.get_emails.return_value = []
-      assert_equal(self.moderator.send_email.mock_calls, [
+      self.assert_sent_emails([
         call(self.sauron, "Mafia", StartsWith("Votes must take the form:")),
       ])
-      self.moderator.send_email.reset_mock()
 
       # Pass 5: Advance the clock so day resolves.
       self.moderator.get_time.return_value = self.moderator.phase_end + \
                                              datetime.timedelta(seconds=1)
       yield True
-      assert_equal(self.moderator.send_email.mock_calls, [
+      self.assert_sent_emails([
         call(events.PUBLIC, "LOTR Mafia: Day 1", "Sauron, the Mafia Godfather, was lynched."),
         call(events.PUBLIC, "LOTR Mafia: The End", Glob("*Congratulations to Frodo, Gandalf and Samwise*")),
       ])
-      self.moderator.send_email.reset_mock()
 
       # Exit
       yield "Foobar"
