@@ -73,6 +73,7 @@ class ModeratorUnitTest(ModeratorTest):
         call([self.sam],     subject, StartsWith("You are the Mason Villager.")),
         call([self.sauron],  subject, StartsWith("You are the Mafia Godfather.")),
         call([self.frodo, self.sam], subject, "Frodo and Samwise, you are the Fellowship."),
+        call([self.sauron],  subject, StartsWith("You are the leader of the Forces of Darkness."))
       ])
       assert self.moderator.started
 
