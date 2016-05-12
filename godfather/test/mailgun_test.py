@@ -45,6 +45,6 @@ class MailgunTest(unittest.TestCase):
       time.sleep(2)
 
     assert_equal(emails, [
-      Email(sender=self.mailgun1.email, body="ohai."),
-      Email(sender=self.mailgun1.email, body="kthxbai."),
+      Email(sender=self.mailgun1.email, subject="Test", body="ohai."),
+      Email(sender=self.mailgun1.email, subject="Test", body="kthxbai."),
     ])

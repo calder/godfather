@@ -51,16 +51,13 @@ class Moderator(object):
     """Return the current time. Overridden in tests."""
     return datetime.datetime.now()
 
-  def run(self, *, setup_only=False):
+  def run(self):
     """Run the game until it finishes or an interrupt is received."""
     logging.info("Running %s..." % self.name)
 
     if not self.started:
       self.start()
       self.save()
-
-    if setup_only:
-      return
 
     while True:
       for email in self.get_emails():
