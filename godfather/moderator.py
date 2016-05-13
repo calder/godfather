@@ -6,8 +6,19 @@ import mafia
 import pickle
 import requests
 import termcolor
+import signal
+import sys
 import time
 import uuid
+
+cancelled = False
+
+def signal_handler(signal, frame):
+  global cancelled
+  logging.info("Shutting down...")
+  cancelled = True
+
+signal.signal(signal.SIGINT, signal_handler)
 
 from .mailgun import *
 
@@ -82,8 +93,10 @@ class Moderator(object):
   def sleep(self):
     """Pause for a few seconds, and return whether execution should continue.
     Overridden in tests."""
-    time.sleep(10)
-    return True  # TODO: Check for interrupts
+    for i in range(10):
+      time.sleep(1)
+      if cancelled: return False
+    return True
 
   def start(self):
     """Start the game and send out role emails."""
