@@ -92,7 +92,7 @@ class ModeratorUnitTest(ModeratorTest):
       yield True
       self.assert_sent_emails([
         call(events.PUBLIC, "LOTR Mafia: Night 0", "Frodo, the Mason Villager, has died."),
-        call(events.PUBLIC, "LOTR Mafia: Day 1", "Day 1 actions are due by 10:00 PM."),
+        call(events.PUBLIC, "LOTR Mafia: Night 0", "Night 0 is over. Day 1 actions are due by 10:00 PM."),
       ])
 
       # Pass 4: Send in some vote emails.

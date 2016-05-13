@@ -114,13 +114,15 @@ class Moderator(object):
   def advance_phase(self):
     """Resolve the current phase and start the next one."""
     self.game.resolve(self.phase)
+    last_phase = self.phase
     self.phase = self.phase.next_phase()
     self.phase_end = self.get_phase_end(start=self.get_time())
 
     if not self.game.is_game_over():
       phase_end = self.phase_end.time().strftime("%I:%M %p")
-      subject = "%s: %s" % (self.name, self.phase)
-      body = "%s actions are due by %s." % (self.phase, phase_end)
+      subject = "%s: %s" % (self.name, last_phase)
+      body = "%s is over. %s actions are due by %s." % \
+             (last_phase, self.phase, phase_end)
       self.send_email(mafia.events.PUBLIC, subject, body)
 
   def send_email(self, to, subject, body):
