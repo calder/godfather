@@ -11,6 +11,11 @@ import sys
 import time
 import uuid
 
+# Mailgun does not guarantee that received messages will be immediately
+# visible via their API. If we check at 12:01, we should only assume that
+# messages up to 12:00 are already available.
+MAIL_DELIVERY_LAG = datetime.timedelta(minutes=1)
+
 cancelled = False
 
 def signal_handler(signal, frame):
@@ -59,7 +64,7 @@ class Moderator(object):
     return d
 
   def get_time(self):
-    """Return the current time. Overridden in tests."""
+    """Return the current time."""
     return datetime.datetime.now()
 
   def run(self):
@@ -74,7 +79,7 @@ class Moderator(object):
       for email in self.get_emails():
         self.email_received(email)
 
-      if self.get_time() > self.phase_end:
+      if self.get_time() > self.phase_end + MAIL_DELIVERY_LAG:
         self.advance_phase()
 
       self.save()
@@ -87,12 +92,11 @@ class Moderator(object):
         return
 
   def save(self):
-    """Save the current Moderator state to disk. Overridden in tests."""
+    """Save the current Moderator state to disk."""
     pickle.dump(self, open(self.path, "wb"))
 
   def sleep(self):
-    """Pause for a few seconds, and return whether execution should continue.
-    Overridden in tests."""
+    """Pause for a few seconds, and return whether execution should continue."""
     for i in range(10):
       time.sleep(1)
       if cancelled: return False
@@ -139,8 +143,7 @@ class Moderator(object):
       self.send_email(mafia.events.PUBLIC, subject, body)
 
   def send_email(self, to, subject, body):
-    """Send an email to a player, list of players, or everyone.
-    Overridden in tests."""
+    """Send an email to a player, list of players, or everyone."""
     assert to
     if to == mafia.events.PUBLIC:
       to = self.game.all_players
@@ -151,19 +154,23 @@ class Moderator(object):
     self.mailgun.send_email(Email(recipients=recipients, subject=subject, body=body))
 
   def get_emails(self):
-    """Return a list of emails received since the last check.
-    Overridden in tests."""
-    cutoff = self.get_time() - datetime.timedelta(minutes=1)
+    """Return a list of emails received since the last check."""
+    cutoff = self.get_time() - MAIL_DELIVERY_LAG
     cutoff = min(cutoff, self.phase_end)
 
     messages = []
     for email in self.mailgun.get_emails(self.last_fetch, cutoff):
-      if email.sender in self.players:
-        messages.append(Email(sender=self.players[email.sender],
+      sender = email.sender.lower()
+      if sender in self.players:
+        messages.append(Email(sender=self.players[sender],
                               subject=email.subject,
                               body=email.body))
       else:
-        logging.info("Discarding message from non-player '%s'." % email.sender)
+        logging.info("Discarding message from non-player '%s'." % sender)
+        self.mailgun.send_email(Email(
+          recipients=[email.sender],
+          subject=email.subject,
+          body="Unrecognized player: '%s'." % sender))
 
     self.last_fetch = cutoff
     return messages
@@ -177,14 +184,14 @@ class Moderator(object):
       subject = "%s: %s" % (self.name, event.phase)
       self.send_email(to, subject, event.full_message)
 
-  def email_received(self, message):
+  def email_received(self, email):
     """Called when an email is received from a player."""
-    action = message.body.strip().split("\n")[0].strip(".!?> \t").lower()
+    action = email.body.strip().split("\n")[0].strip(".!?> \t").lower()
     prefix = termcolor.colored("◀◀◀", "yellow")
-    logging.info("%s %s" % (prefix, message))
+    logging.info("%s %s" % (prefix, email))
 
     try:
-      self.phase.add_parsed(message.sender, action, game=self.game)
+      self.phase.add_parsed(email.sender, action, game=self.game)
     except mafia.InvalidAction as e:
       body = "%s\n\n> %s" % (str(e), action)
-      self.send_email(message.sender, message.subject, body)
+      self.send_email(email.sender, email.subject, body)

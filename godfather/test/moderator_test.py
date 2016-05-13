@@ -20,7 +20,7 @@ class ModeratorTest(CliTest):
     self.masons  = self.game.add_faction(Masonry("Fellowship", self.town))
     self.mafia   = self.game.add_faction(Mafia("Forces of Darkness"))
     self.frodo   = self.game.add_player("Frodo", Villager(self.masons),
-                                        info={"email": "frodo@shire.gov"})
+                                        info={"email": "frodo@bagend.shire"})
     self.sam     = self.game.add_player("Samwise", Villager(self.masons),
                                         info={"email": "sam@samsgardening.com"})
     self.gandalf = self.game.add_player("Gandalf", Cop(self.town),
@@ -40,6 +40,8 @@ class ModeratorTest(CliTest):
     self.moderator.get_time.return_value = datetime.datetime.now()
 
 class ModeratorUnitTest(ModeratorTest):
+  """These tests mock out all of Moderator's "side effect" methods."""
+
   def setUp(self):
     super().setUp()
     self.emails = []
@@ -56,6 +58,11 @@ class ModeratorUnitTest(ModeratorTest):
   def assert_sent_emails(self, calls):
     assert_equal(self.moderator.send_email.mock_calls, calls)
     self.moderator.send_email.reset_mock()
+
+  def advance_phase(self):
+    self.moderator.get_time.return_value = self.moderator.phase_end + \
+                                           MAIL_DELIVERY_LAG + \
+                                           datetime.timedelta(seconds=1)
 
   def test_simple_game(self):
     def logic():
@@ -81,8 +88,7 @@ class ModeratorUnitTest(ModeratorTest):
       ])
 
       # Pass 3: Advance the clock so night resolves.
-      self.moderator.get_time.return_value = self.moderator.phase_end + \
-                                             datetime.timedelta(seconds=1)
+      self.advance_phase()
       yield True
       self.assert_sent_emails([
         call(events.PUBLIC, "LOTR Mafia: Night 0", "Frodo, the Mason Villager, has died."),
@@ -98,8 +104,7 @@ class ModeratorUnitTest(ModeratorTest):
       ])
 
       # Pass 5: Advance the clock so day resolves.
-      self.moderator.get_time.return_value = self.moderator.phase_end + \
-                                             datetime.timedelta(seconds=1)
+      self.advance_phase()
       yield True
       self.assert_sent_emails([
         call(events.PUBLIC, "LOTR Mafia: Day 1", "Sauron, the Mafia Godfather, was lynched."),
@@ -126,6 +131,7 @@ class ModeratorUnitTest(ModeratorTest):
     assert_equal(next, self.moderator.get_next_occurrence(now, time))
 
 class ModeratorFunctionalTest(ModeratorTest):
+  """These tests mock out only time functions and the Mailgun object."""
 
   def address(self, player):
     return "%s <%s>" % (player.name, player.info["email"])
@@ -161,4 +167,26 @@ class ModeratorFunctionalTest(ModeratorTest):
     ])
 
   def test_get_emails(self):
-    pass
+    now = datetime.datetime(year=2001, month=1, day=1, hour=1)
+    self.moderator.last_fetch = now - datetime.timedelta(days=1)
+    self.moderator.get_time.return_value = now
+    emails = self.moderator.get_emails()
+    assert_equal(emails, [])
+    assert_equal(self.moderator.last_fetch, now - MAIL_DELIVERY_LAG)
+
+    self.moderator.mailgun.get_emails.return_value = [
+      Email(sender="frodo@bagend.shire",      subject="1", body="Body 1"),
+      Email(sender="sam@samsgardening.com",   subject="2", body="Body 2"),
+      Email(sender="caldercoalson@gmail.com", subject="3", body="Body 3"),
+    ]
+    emails = self.moderator.get_emails()
+    assert_equal(emails, [
+      Email(sender=self.frodo, subject="1", body="Body 1"),
+      Email(sender=self.sam,   subject="2", body="Body 2"),
+    ])
+    self.moderator.mailgun.send_email.assert_called_with(Email(
+      recipients=["caldercoalson@gmail.com"],
+      subject="3",
+      body="Unrecognized player: 'caldercoalson@gmail.com'.",
+    ))
+    assert_equal(self.moderator.last_fetch, now - MAIL_DELIVERY_LAG)
