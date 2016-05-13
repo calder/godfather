@@ -144,12 +144,11 @@ class Moderator(object):
 
     if not self.game.is_game_over():
       phase_end = self.phase_end.time().strftime("%I:%M %p")
-      subject = "%s: %s" % (self.name, last_phase)
       players = "\n".join(["  " + p.name for p in self.game.players])
       body = "%s is over. %s actions are due by %s.\n\n"\
              "Remaining players: %s" % \
              (last_phase, self.phase, phase_end, players)
-      self.send_email(mafia.events.PUBLIC, subject, body)
+      self.send_email(mafia.events.PUBLIC, self.current_subject, body)
 
   def send_email(self, to, subject, body):
     """Send an email to a player, list of players, or everyone."""
@@ -189,9 +188,8 @@ class Moderator(object):
     prefix = termcolor.colored(">>>", "yellow")
     logging.info("%s %s" % (prefix, event.colored_str()))
     if event.to:
-      to = event.to
       subject = "%s: %s" % (self.name, event.phase)
-      self.send_email(to, subject, event.full_message)
+      self.send_email(event.to, subject, event.full_message)
 
   def email_received(self, email):
     """Called when an email is received from a player."""
@@ -201,7 +199,16 @@ class Moderator(object):
 
     try:
       self.phase.add_parsed(email.sender, action, game=self.game)
-      body = "Action confirmed.\n\n> %s" % action
+      if isinstance(self.phase, mafia.Day):
+        voters = sorted([p for p in self.phase.votes.keys() if p and p.alive])
+        votes = "\n".join(["  %s votes for %s." % (p, self.phase.votes[p]) for p in voters])
+        body = "Current votes:\n%s" % votes
+        self.send_email(mafia.events.PUBLIC, self.current_subject, body)
     except mafia.InvalidAction as e:
       body = "%s\n\n> %s" % (str(e), action)
-    self.send_email(email.sender, email.subject, body)
+      self.send_email(email.sender, email.subject, body)
+
+  @property
+  def current_subject(self):
+    """Return the subject to use for phase-related announcements."""
+    return "%s: %s" % (self.name, self.phase)

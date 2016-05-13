@@ -156,7 +156,7 @@ def run(game_dir, setup_only):
     moderator.run()
 
 @standard_options()
-def advance(game_dir):
+def poke(game_dir):
   """Resolve the current stage and exit."""
 
   game_path = os.path.join(game_dir, "game.pickle")

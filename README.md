@@ -48,6 +48,4 @@ nosetests
 ## TODO
 
 - Add full-game integration test
-- Action receipt confirmation email
-- How to vote in email
-- Current vote tallies
+- Vote deletion
