@@ -92,7 +92,11 @@ class Moderator(object):
     welcome = "Welcome to %s. You will receive your roles via email shortly." \
               "You may discuss them all you like, but under no circumstances " \
               "may you show another player any email you receive from me.\n\n" \
-              "Your fellow players:\n%s" % (self.name, players)
+              "Night 0 begins tonight.\n" \
+              "Night actions are due by %s.\n" \
+              "Day votes are due by %s.\n\n" \
+              "Your fellow players:\n%s" % \
+              (self.name, self.night_end, self.day_end, players)
     self.send_email(mafia.events.PUBLIC, "%s: Welcome" % self.name, welcome)
     self.game.begin()
     self.started = True
