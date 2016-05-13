@@ -92,6 +92,7 @@ class ModeratorUnitTest(ModeratorTest):
       yield True
       self.assert_sent_emails([
         call(events.PUBLIC, "LOTR Mafia: Night 0", "Frodo, the Mason Villager, has died."),
+        call(events.PUBLIC, "LOTR Mafia: Day 1", "Day 1 actions are due by 10:00 PM."),
       ])
 
       # Pass 4: Send in some vote emails.
@@ -120,12 +121,12 @@ class ModeratorUnitTest(ModeratorTest):
     assert_equal(next(test_logic), "Foobar")
 
   def test_get_next_occurrence(self):
-    now  = datetime.datetime(year=2001, month=1, day=1, hour=11)
+    now  = datetime.datetime(year=2001, month=1, day=1, hour=11, second=30)
     time = datetime.time(hour=12)
     next = datetime.datetime(year=2001, month=1, day=1, hour=12)
     assert_equal(next, self.moderator.get_next_occurrence(now, time))
 
-    now  = datetime.datetime(year=2001, month=1, day=1, hour=13)
+    now  = datetime.datetime(year=2001, month=1, day=1, hour=13, second=30)
     time = datetime.time(hour=12)
     next = datetime.datetime(year=2001, month=1, day=2, hour=12)
     assert_equal(next, self.moderator.get_next_occurrence(now, time))

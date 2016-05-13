@@ -42,7 +42,7 @@ class Moderator(object):
 
   def get_next_occurrence(self, start, time):
     """Return the next occurence of time <time> after datetime <start>."""
-    d = start.replace(hour=time.hour, minute=time.minute)
+    d = start.replace(hour=time.hour, minute=time.minute, second=time.second)
     if d < start:
       d = d + datetime.timedelta(days=1)
     return d
@@ -94,7 +94,7 @@ class Moderator(object):
               "may you show another player any email you receive from me.\n\n" \
               "Night 0 begins tonight.\n" \
               "Night actions are due by %s.\n" \
-              "Day votes are due by %s.\n\n" \
+              "Day actions are due by %s.\n\n" \
               "Your fellow players:\n%s" % \
               (self.name, self.night_end, self.day_end, players)
     self.send_email(mafia.events.PUBLIC, "%s: Welcome" % self.name, welcome)
@@ -116,6 +116,12 @@ class Moderator(object):
     self.game.resolve(self.phase)
     self.phase = self.phase.next_phase()
     self.phase_end = self.get_phase_end(start=self.get_time())
+
+    if not self.game.is_game_over():
+      phase_end = self.phase_end.time().strftime("%I:%M %p")
+      subject = "%s: %s" % (self.name, self.phase)
+      body = "%s actions are due by %s." % (self.phase, phase_end)
+      self.send_email(mafia.events.PUBLIC, subject, body)
 
   def send_email(self, to, subject, body):
     """Send an email to a list of players, or everyone if to=PUBLIC.

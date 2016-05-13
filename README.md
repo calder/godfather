@@ -47,7 +47,6 @@ nosetests
 
 ## TODO
 
-- Add phase end emails
 - Add get_emails unit tests
 - Add send_emails unit tests
 - Add full-game integration test
