@@ -115,8 +115,12 @@ class Moderator(object):
               "Night 0 begins tonight.\n" \
               "Night actions are due by %s.\n" \
               "Day actions are due by %s.\n\n" \
-              "Your fellow players:\n%s" % \
-              (self.name, self.night_end, self.day_end, players)
+              "Your fellow players:\n%s" % (
+                self.name,
+                self.night_end.strftime("%I:%M %p"),
+                self.day_end.strftime("%I:%M %p"),
+                players
+              )
     self.send_email(mafia.events.PUBLIC, "%s: Welcome" % self.name, welcome)
     self.game.begin()
     self.started = True
@@ -189,7 +193,7 @@ class Moderator(object):
 
   def email_received(self, email):
     """Called when an email is received from a player."""
-    action = email.body.strip().split("\n")[0].strip(".!?> \t").lower()
+    action = email.body.strip().split("\n")[0].strip().strip(".!?>").lower()
     prefix = termcolor.colored("◀◀◀", "yellow")
     logging.info("%s %s" % (prefix, email))
 

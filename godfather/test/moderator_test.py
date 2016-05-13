@@ -96,7 +96,7 @@ class ModeratorUnitTest(ModeratorTest):
       ])
 
       # Pass 4: Send in some vote emails.
-      self.emails.append(Email(sender=self.sam, subject="My Vote", body="vote sauron"))
+      self.emails.append(Email(sender=self.sam, subject="My Vote", body="vote sauron\r\n-Sam"))
       self.emails.append(Email(sender=self.sauron, subject="Mafia", body="GRRRRRRRRR"))
       yield True
       self.assert_sent_emails([
