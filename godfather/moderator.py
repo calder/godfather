@@ -88,6 +88,12 @@ class Moderator(object):
   def start(self):
     """Start the game and send out role emails."""
     logging.info("Starting game...")
+    players = "\n".join([p.name for p in self.game.all_players])
+    welcome = "Welcome to %s. You will receive your roles via email shortly." \
+              "You may discuss them all you like, but under no circumstances " \
+              "may you show another player any email you receive from me.\n\n" \
+              "Your fellow players:\n%s" % (self.name, players)
+    self.send_email(mafia.events.PUBLIC, "%s: Welcome" % self.name, welcome)
     self.game.begin()
     self.started = True
 

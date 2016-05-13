@@ -68,6 +68,7 @@ class ModeratorUnitTest(ModeratorTest):
       # Pass 1: Role and faction emails should be sent.
       subject = "LOTR Mafia: Start"
       self.assert_sent_emails([
+        call(events.PUBLIC, "LOTR Mafia: Welcome", StartsWith("Welcome to LOTR Mafia.")),
         call([self.frodo],   subject, StartsWith("You are the Mason Villager.")),
         call([self.gandalf], subject, StartsWith("You are the Town Cop.")),
         call([self.sam],     subject, StartsWith("You are the Mason Villager.")),
