@@ -108,7 +108,7 @@ class Moderator(object):
   def start(self):
     """Start the game and send out role emails."""
     logging.info("Starting game...")
-    players = "\n".join([p.name for p in self.game.all_players])
+    players = "\n".join(["  " + p.name for p in self.game.all_players])
     welcome = "Welcome to %s. You will receive your roles via email shortly." \
               "You may discuss them all you like, but under no circumstances " \
               "may you show another player any email you receive from me.\n\n" \
@@ -145,8 +145,10 @@ class Moderator(object):
     if not self.game.is_game_over():
       phase_end = self.phase_end.time().strftime("%I:%M %p")
       subject = "%s: %s" % (self.name, last_phase)
-      body = "%s is over. %s actions are due by %s." % \
-             (last_phase, self.phase, phase_end)
+      players = "\n".join(["  " + p.name for p in self.game.players])
+      body = "%s is over. %s actions are due by %s.\n\n"\
+             "Remaining players: %s" % \
+             (last_phase, self.phase, phase_end, players)
       self.send_email(mafia.events.PUBLIC, subject, body)
 
   def send_email(self, to, subject, body):
@@ -199,6 +201,7 @@ class Moderator(object):
 
     try:
       self.phase.add_parsed(email.sender, action, game=self.game)
+      body = "Action confirmed.\n\n> %s" % action
     except mafia.InvalidAction as e:
       body = "%s\n\n> %s" % (str(e), action)
-      self.send_email(email.sender, email.subject, body)
+    self.send_email(email.sender, email.subject, body)

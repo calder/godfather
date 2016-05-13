@@ -49,6 +49,5 @@ nosetests
 
 - Add full-game integration test
 - Action receipt confirmation email
-- Nobody died email
 - How to vote in email
 - Current vote tallies
