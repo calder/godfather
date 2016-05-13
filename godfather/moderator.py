@@ -139,11 +139,13 @@ class Moderator(object):
       self.send_email(mafia.events.PUBLIC, subject, body)
 
   def send_email(self, to, subject, body):
-    """Send an email to a list of players, or everyone if to=PUBLIC.
+    """Send an email to a player, list of players, or everyone.
     Overridden in tests."""
     assert to
     if to == mafia.events.PUBLIC:
       to = self.game.all_players
+    if not isinstance(to, list):
+      to = [to]
     recipients = ["%s <%s>" % (p.name, p.info["email"]) for p in to]
 
     self.mailgun.send_email(Email(recipients=recipients, subject=subject, body=body))

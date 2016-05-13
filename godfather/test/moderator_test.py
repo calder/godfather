@@ -39,12 +39,6 @@ class ModeratorTest(CliTest):
 
     self.moderator.get_time.return_value = datetime.datetime.now()
 
-  def test_send_email(self):
-    pass  # Placeholder
-
-  def test_get_emails(self):
-    pass  # Placeholder
-
 class ModeratorUnitTest(ModeratorTest):
   def setUp(self):
     super().setUp()
@@ -130,3 +124,41 @@ class ModeratorUnitTest(ModeratorTest):
     time = datetime.time(hour=12)
     next = datetime.datetime(year=2001, month=1, day=2, hour=12)
     assert_equal(next, self.moderator.get_next_occurrence(now, time))
+
+class ModeratorFunctionalTest(ModeratorTest):
+
+  def address(self, player):
+    return "%s <%s>" % (player.name, player.info["email"])
+
+  def test_send_public_email(self):
+    self.moderator.send_email(events.PUBLIC, "Test", "Test body.")
+    assert_equal(self.moderator.mailgun.mock_calls, [
+      call.send_email(Email(
+        recipients=[self.address(p) for p in self.game.players],
+        subject="Test",
+        body="Test body.")
+      )
+    ])
+
+  def test_send_private_email(self):
+    self.moderator.send_email(self.sam, "Test", "Test body.")
+    assert_equal(self.moderator.mailgun.mock_calls, [
+      call.send_email(Email(
+        recipients=[self.address(self.sam)],
+        subject="Test",
+        body="Test body.")
+      )
+    ])
+
+  def test_send_group_email(self):
+    self.moderator.send_email([self.sam, self.frodo], "Test", "Test body.")
+    assert_equal(self.moderator.mailgun.mock_calls, [
+      call.send_email(Email(
+        recipients=[self.address(self.sam), self.address(self.frodo)],
+        subject="Test",
+        body="Test body.")
+      )
+    ])
+
+  def test_get_emails(self):
+    pass

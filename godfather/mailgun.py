@@ -8,7 +8,7 @@ class Email(dict):
     return self[attr]
 
   def __repr__(self):
-    items = ["%r=%r" % (k, v) for k, v in self.items() if v]
+    items = ["%s=%r" % (k, v) for k, v in self.items() if v]
     return "Email(%s)" % ", ".join(items)
 
 class Mailgun(object):
