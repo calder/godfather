@@ -48,4 +48,3 @@ nosetests
 ## TODO
 
 - Add full-game integration test
-- Vote deletion

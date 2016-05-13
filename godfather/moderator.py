@@ -14,9 +14,9 @@ import uuid
 from .mailgun import *
 
 # Mailgun does not guarantee that received messages will be immediately
-# visible via their API. If we check at 12:01, we should only assume that
-# messages up to 12:00 are already available.
-MAIL_DELIVERY_LAG = datetime.timedelta(minutes=1)
+# visible via their API. If we check at 12:00:30, we should only assume
+# that messages up to 12:00:00 are already available.
+MAIL_DELIVERY_LAG = datetime.timedelta(seconds=30)
 
 cancelled = False
 
