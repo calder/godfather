@@ -11,6 +11,8 @@ import sys
 import time
 import uuid
 
+from .mailgun import *
+
 # Mailgun does not guarantee that received messages will be immediately
 # visible via their API. If we check at 12:01, we should only assume that
 # messages up to 12:00 are already available.
@@ -18,14 +20,15 @@ MAIL_DELIVERY_LAG = datetime.timedelta(minutes=1)
 
 cancelled = False
 
-def signal_handler(signal, frame):
+def set_cancelled(c):
   global cancelled
+  cancelled = c
+
+def signal_handler(signal, frame):
   logging.info("Shutting down...")
-  cancelled = True
+  set_cancelled(True)
 
 signal.signal(signal.SIGINT, signal_handler)
-
-from .mailgun import *
 
 class Moderator(object):
   def __init__(self, *, path, game, name, night_end, day_end, mailgun_key):
@@ -98,8 +101,8 @@ class Moderator(object):
   def sleep(self):
     """Pause for a few seconds, and return whether execution should continue."""
     for i in range(10):
-      time.sleep(1)
       if cancelled: return False
+      time.sleep(1)
     return True
 
   def start(self):

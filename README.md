@@ -48,4 +48,3 @@ nosetests
 ## TODO
 
 - Add full-game integration test
-- Add an `advance` command to the CLI to force advance the phase

@@ -2,18 +2,13 @@ import os
 import pickle
 import pluginbase
 
-from .cli_test import CliTest
+from .cli_test import *
 from ..moderator import *
 
 def fake_run():
-  events.append("Moderator.run()")
+  record_global_event("run")
 
 class RunTest(CliTest):
-
-  def setUp(self):
-    super().setUp()
-    global events
-    events = []
 
   def test_setup(self):
     """Test setup functionality of 'run'."""
@@ -35,23 +30,18 @@ class RunTest(CliTest):
 
   def test_moderator_run(self):
     """'run' should call Moderator.run()."""
-    global events
-
     self.godfather(["init", self.game_dir])
     self.godfather(["run", "--setup_only", self.game_dir])
 
     # Inject a run() method we can check.
-    global test_path
-    test_path = os.path.join(self.game_dir, "test_file.txt")
     moderator = pickle.load(open(self.game_path, "rb"))
     moderator.run = fake_run
     pickle.dump(moderator, open(self.game_path, "wb"))
 
     # Call 'run' and check that our run() method was called.
     self.godfather(["run", self.game_dir])
-    self.assertEqual(["Moderator.run()"], events)
+    check_and_clear_global_events(["run"])
 
     # Check that 'run --setup_only' doesn't call run().
-    events = []
     self.godfather(["run", "--setup_only", self.game_dir])
-    self.assertEqual([], events)
+    check_and_clear_global_events([])

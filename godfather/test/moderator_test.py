@@ -175,9 +175,9 @@ class ModeratorFunctionalTest(ModeratorTest):
     assert_equal(self.moderator.last_fetch, now - MAIL_DELIVERY_LAG)
 
     self.moderator.mailgun.get_emails.return_value = [
-      Email(sender="frodo@bagend.shire",      subject="1", body="Body 1"),
-      Email(sender="sam@samsgardening.com",   subject="2", body="Body 2"),
-      Email(sender="caldercoalson@gmail.com", subject="3", body="Body 3"),
+      Email(sender="frodo@bagend.shire",    subject="1", body="Body 1"),
+      Email(sender="sam@samsgardening.com", subject="2", body="Body 2"),
+      Email(sender="saruman@orthanc.me",    subject="3", body="Body 3"),
     ]
     emails = self.moderator.get_emails()
     assert_equal(emails, [
@@ -185,8 +185,8 @@ class ModeratorFunctionalTest(ModeratorTest):
       Email(sender=self.sam,   subject="2", body="Body 2"),
     ])
     self.moderator.mailgun.send_email.assert_called_with(Email(
-      recipients=["caldercoalson@gmail.com"],
+      recipients=["saruman@orthanc.me"],
       subject="3",
-      body="Unrecognized player: 'caldercoalson@gmail.com'.",
+      body="Unrecognized player: 'saruman@orthanc.me'.",
     ))
     assert_equal(self.moderator.last_fetch, now - MAIL_DELIVERY_LAG)

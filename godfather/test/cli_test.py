@@ -1,16 +1,38 @@
 import click.testing
+import mafia
 import os
 import subprocess
 import tempfile
 import unittest
 
 import godfather.main
+from .godfather_test import *
 
-class CliTest(unittest.TestCase):
+def record_global_event(event):
+  """Add a global event. Useful for testing function calls across pickling."""
+  global events
+  events.append("run")
+
+def get_global_events():
+  """Return all global events."""
+  global events
+  return events
+
+def clear_global_events():
+  """Clear all global events."""
+  global events
+  events = []
+
+def check_and_clear_global_events(events):
+  mafia.assert_equal(get_global_events(), events)
+  clear_global_events()
+
+class CliTest(GodfatherTest):
   """Base class for tests of the godfather command line interface."""
 
   def setUp(self):
     super().setUp()
+    clear_global_events()
     self.game_dir_tempfile = tempfile.TemporaryDirectory()
     self.game_dir = self.game_dir_tempfile.name
 

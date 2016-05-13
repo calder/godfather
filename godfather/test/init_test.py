@@ -4,7 +4,7 @@ import os
 import pickle
 import pluginbase
 
-from .cli_test import CliTest
+from .cli_test import *
 
 class InitTest(CliTest):
 

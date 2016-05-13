@@ -81,8 +81,21 @@ def standard_options(*, game_dir_must_exist=True):
     return wrapper
   return decorator
 
+def load_game(game_path):
+  # Load game.pickle and check that it's valid.
+  try:
+    moderator = pickle.load(open(game_path, "rb"))
+    if not isinstance(moderator, Moderator):
+      raise click.ClickException("'%s is not a Moderator object." % game_path)
+    moderator.path = game_path
+    return moderator
+  except pickle.UnpicklingError:
+    raise click.ClickException("%s is not a valid game file." % game_path)
+
 @standard_options(game_dir_must_exist=False)
 def init(game_dir):
+  """Initialize the game directory."""
+
   # Create game directory if it doesn't exist.
   logging.info("Creating %s..." % game_dir)
   os.makedirs(game_dir, exist_ok=True)
@@ -102,6 +115,8 @@ def init(game_dir):
 @standard_options()
 @click.option("--setup_only", is_flag=True)
 def run(game_dir, setup_only):
+  """Run the game to completion or ctrl-c, saving checkpoints regularly."""
+
   # Get Mailgun key.
   mailgun_key_path = os.path.expanduser("~/.config/godfather/mailgun_key.txt")
   logging.info("Checking for %s..." % mailgun_key_path)
@@ -134,21 +149,27 @@ def run(game_dir, setup_only):
                           mailgun_key=mailgun_key)
     pickle.dump(moderator, open(game_path, "wb"))
 
-  # Load game.pickle and check that it's valid.
-  try:
-    moderator = pickle.load(open(game_path, "rb"))
-    if not isinstance(moderator, Moderator):
-      raise click.ClickException("'%s is not a Moderator object." % game_path)
-  except pickle.UnpicklingError:
-    raise click.ClickException("%s is not a valid game file." % game_path)
+  moderator = load_game(game_path)
 
   # Run the Moderator (runs until interrupted).
   if not setup_only:
-    moderator.path = game_path
     moderator.run()
 
 @standard_options()
+def advance(game_dir):
+  """Resolve the current stage and exit."""
+
+  game_path = os.path.join(game_dir, "game.pickle")
+  moderator = load_game(game_path)
+
+  moderator.phase_end = datetime.datetime.now() - MAIL_DELIVERY_LAG
+  set_cancelled(True)
+  moderator.run()
+
+@standard_options()
 def log(game_dir):
+  """Show the game log so far."""
+
   # Print the log if there is one.
   game_path = os.path.join(game_dir, "game.pickle")
   if not os.path.isfile(game_path):
