@@ -35,7 +35,11 @@ game_seed  = %(game_seed)d
 
 # Helpers
 Player = collections.namedtuple("Player", ["name", "email"])
-def add_player(game, player, role):
+player_index = 0
+def add_player(role):
+  global game, player_index, players
+  player = players[player_index]
+  player_index += 1
   return game.add_player(player.name, role, info={"email": player.email})
 
 # Player list
@@ -51,10 +55,10 @@ random.Random(setup_seed).shuffle(players)
 game     = Game(seed=game_seed)
 town     = game.add_faction(Town())
 mafia    = game.add_faction(Mafia("NSA"))
-cop      = add_player(game, players[0], Cop(town))
-doctor   = add_player(game, players[1], Doctor(town))
-villager = add_player(game, players[2], Villager(town))
-goon     = add_player(game, players[3], Goon(mafia))
+cop      = add_player(Cop(town))
+doctor   = add_player(Doctor(town))
+villager = add_player(Villager(town))
+goon     = add_player(Goon(mafia))
 """.strip()
 
 @click.group()
@@ -73,7 +77,7 @@ def standard_options(*, game_dir_must_exist=True):
                                     exists=game_dir_must_exist))
     @functools.wraps(f)
     def wrapper(verbose, *args, **kwargs):
-      level = logging.INFO if verbose else logging.WARNING
+      level = logging.DEBUG if verbose else logging.INFO
       logging.basicConfig(level=level,
                           format="%(asctime)s %(message)s",
                           datefmt="%Y-%m-%d %H:%M:%S:")
