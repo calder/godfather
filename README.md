@@ -48,3 +48,4 @@ nosetests
 ## TODO
 
 - Add full-game integration test
+- Add public and private CC lists

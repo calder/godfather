@@ -85,6 +85,7 @@ class ModeratorUnitTest(ModeratorTest):
       yield True
       self.assert_sent_emails([
         call(self.sam, "Mafia", "No actions available.\n\n> protect frodo"),
+        call(self.sauron, "Mafia", "Confirmed: sauron: kill frodo"),
       ])
 
       # Pass 3: Advance the clock so night resolves.

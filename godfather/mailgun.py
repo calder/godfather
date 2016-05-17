@@ -2,6 +2,10 @@ import click
 import json
 import logging
 import requests
+import requests.packages.urllib3
+
+# Disable "Starting new HTTPS connection" message.
+requests.packages.urllib3.connectionpool.log.setLevel(logging.WARNING)
 
 class Email(dict):
   def __getattr__(self, attr):

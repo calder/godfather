@@ -204,6 +204,9 @@ class Moderator(object):
         votes = "\n".join(["  %s votes for %s." % (p, self.phase.votes[p]) for p in voters])
         body = "Current votes:\n%s" % votes
         self.send_email(mafia.events.PUBLIC, self.current_subject, body)
+      else:
+        body = "Confirmed: %s" % action
+        self.send_email(email.sender, email.subject, body)
     except mafia.InvalidAction as e:
       body = "%s\n\n> %s" % (str(e), action)
       self.send_email(email.sender, email.subject, body)
