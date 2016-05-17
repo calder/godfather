@@ -32,7 +32,7 @@ class Mailgun(object):
     logging.info("Sending email:")
     logging.info("  To:      %s" % ", ".join(email.recipients))
     logging.info("  Subject: %s" % email.subject)
-    logging.info("  Body:    %s" % email.body)
+    logging.info("  Body:\n%s" % email.body)
 
     result = requests.post(
         "https://api.mailgun.net/v3/%s/messages" % self.domain,
