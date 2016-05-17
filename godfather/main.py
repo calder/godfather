@@ -5,6 +5,7 @@ import mafia
 import os
 import pickle
 import pluginbase
+import pytz
 import random
 
 from .moderator import *
@@ -21,13 +22,16 @@ It will be imported and the following variables read:
 
 import collections
 import datetime
+import pytz
 import random
+
 from mafia import *
 
 # Basic game settings
 game_name = "Crypto Mafia"
-night_end = datetime.time(hour=10, minute=00)
-day_end   = datetime.time(hour=12, minute=15)
+time_zone = pytz.timezone("US/Pacific-New")
+night_end = datetime.time(hour=10, minute=00, tzinfo=time_zone)
+day_end   = datetime.time(hour=12, minute=15, tzinfo=time_zone)
 
 # Random seeds
 setup_seed = %(setup_seed)d
@@ -36,15 +40,14 @@ game_seed  = %(game_seed)d
 # Helpers
 Player = collections.namedtuple("Player", ["name", "email"])
 player_index = 0
-def add_player(role):
-  global game, player_index, players
+def add_player(game, role):
+  global player_index, players
   player = players[player_index]
   player_index += 1
   return game.add_player(player.name, role, info={"email": player.email})
 
 # Player list
 players = [
-  Player(name="Tarl", email="tarl@google.com"),
   Player(name="Alice", email="alice@gmail.com"),
   Player(name="Bob", email="bob@gmail.com"),
   Player(name="Eve", email="eve@gmail.com"),
@@ -55,10 +58,9 @@ random.Random(setup_seed).shuffle(players)
 game     = Game(seed=game_seed)
 town     = game.add_faction(Town())
 mafia    = game.add_faction(Mafia("NSA"))
-cop      = add_player(Cop(town))
-doctor   = add_player(Doctor(town))
-villager = add_player(Villager(town))
-goon     = add_player(Goon(mafia))
+cop      = add_player(game, Cop(town))
+doctor   = add_player(game, Doctor(town))
+goon     = add_player(game, Goon(mafia))
 """.strip()
 
 @click.group()
@@ -166,7 +168,7 @@ def poke(game_dir):
   game_path = os.path.join(game_dir, "game.pickle")
   moderator = load_game(game_path)
 
-  moderator.phase_end = datetime.datetime.now() - MAIL_DELIVERY_LAG
+  moderator.phase_end = datetime.datetime.now(pytz.UTC) - MAIL_DELIVERY_LAG
   set_cancelled(True)
   moderator.run()
 

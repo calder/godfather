@@ -4,6 +4,7 @@ import json
 import logging
 import mafia
 import pickle
+import pytz
 import requests
 import termcolor
 import signal
@@ -61,14 +62,14 @@ class Moderator(object):
 
   def get_next_occurrence(self, start, time):
     """Return the next occurence of time <time> after datetime <start>."""
-    d = start.replace(hour=time.hour, minute=time.minute, second=time.second)
+    d = datetime.datetime.combine(start, time)
     if d < start:
-      d = d + datetime.timedelta(days=1)
+      d += datetime.timedelta(days=1)
     return d
 
   def get_time(self):
     """Return the current time."""
-    return datetime.datetime.now()
+    return datetime.datetime.now(pytz.UTC)
 
   def run(self):
     """Run the game until it finishes or an interrupt is received."""

@@ -2,6 +2,7 @@ import datetime
 import nose
 import functools
 import os
+import pytz
 import time
 import unittest
 import uuid
@@ -29,7 +30,7 @@ class MailgunTest(unittest.TestCase):
 
   @attr("test-mailgun")
   def test_send(self):
-    start = datetime.datetime.now()
+    start = datetime.datetime.now(pytz.UTC)
     self.mailgun1.send_email(Email(
       recipients=["%s@%s" % (self.mailgun2.address, self.mailgun2.domain)],
       subject="Test", body="ohai."))
@@ -37,9 +38,9 @@ class MailgunTest(unittest.TestCase):
     self.mailgun1.send_email(Email(
       recipients=["%s@%s" % (self.mailgun2.address, self.mailgun2.domain)],
       subject="Test", body="kthxbai."))
-    end = datetime.datetime.now() + datetime.timedelta(minutes=1)
+    end = datetime.datetime.now(pytz.UTC) + datetime.timedelta(minutes=1)
 
-    while datetime.datetime.now() < end:
+    while datetime.datetime.now(pytz.UTC) < end:
       emails = self.mailgun2.get_emails(start, end)
       if len(emails) >= 2: break
       time.sleep(2)

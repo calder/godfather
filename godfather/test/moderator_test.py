@@ -2,6 +2,7 @@ import datetime
 import os
 import pickle
 import pluginbase
+import pytz
 import unittest
 
 from callee import Glob, StartsWith
@@ -30,14 +31,14 @@ class ModeratorTest(CliTest):
     self.moderator = Moderator(path=self.game_path,
                                game=self.game,
                                name="LOTR Mafia",
-                               night_end=datetime.time(hour=10),
-                               day_end=datetime.time(hour=22),
+                               night_end=datetime.time(hour=10, tzinfo=pytz.UTC),
+                               day_end=datetime.time(hour=22, tzinfo=pytz.UTC),
                                mailgun_key="Fake Key")
     self.moderator.get_time = self.mocks.get_time = MagicMock()
     self.moderator.mailgun  = self.mocks.mailgun  = MagicMock()
     self.moderator.sleep    = self.mocks.sleep    = MagicMock()
 
-    self.moderator.get_time.return_value = datetime.datetime.now()
+    self.moderator.get_time.return_value = datetime.datetime.now(pytz.UTC)
 
 class ModeratorUnitTest(ModeratorTest):
   """These tests mock out all of Moderator's "side effect" methods."""
@@ -122,14 +123,22 @@ class ModeratorUnitTest(ModeratorTest):
     assert_equal(next(test_logic), "Foobar")
 
   def test_get_next_occurrence(self):
-    now  = datetime.datetime(year=2001, month=1, day=1, hour=11, second=30)
-    time = datetime.time(hour=12)
-    next = datetime.datetime(year=2001, month=1, day=1, hour=12)
+    # Same day
+    now  = datetime.datetime(year=2001, month=1, day=1, hour=11, second=30, tzinfo=pytz.UTC)
+    time = datetime.time(hour=12, tzinfo=pytz.UTC)
+    next = datetime.datetime(year=2001, month=1, day=1, hour=12, tzinfo=pytz.UTC)
     assert_equal(next, self.moderator.get_next_occurrence(now, time))
 
-    now  = datetime.datetime(year=2001, month=1, day=1, hour=13, second=30)
-    time = datetime.time(hour=12)
-    next = datetime.datetime(year=2001, month=1, day=2, hour=12)
+    # Next day
+    now  = datetime.datetime(year=2001, month=1, day=1, hour=13, second=30, tzinfo=pytz.UTC)
+    time = datetime.time(hour=12, tzinfo=pytz.UTC)
+    next = datetime.datetime(year=2001, month=1, day=2, hour=12, tzinfo=pytz.UTC)
+    assert_equal(next, self.moderator.get_next_occurrence(now, time))
+
+    # Different timezones
+    now  = datetime.datetime(year=2001, month=1, day=1, hour=13, second=30, tzinfo=pytz.UTC)
+    time = datetime.time(hour=12, tzinfo=pytz.timezone("Etc/GMT+1"))
+    next = datetime.datetime(year=2001, month=1, day=2, hour=12, tzinfo=pytz.timezone("Etc/GMT+1"))
     assert_equal(next, self.moderator.get_next_occurrence(now, time))
 
 class ModeratorFunctionalTest(ModeratorTest):
@@ -169,7 +178,7 @@ class ModeratorFunctionalTest(ModeratorTest):
     ])
 
   def test_get_emails(self):
-    now = datetime.datetime(year=2001, month=1, day=1, hour=1)
+    now = datetime.datetime(year=2001, month=1, day=1, hour=1, tzinfo=pytz.UTC)
     self.moderator.last_fetch = now - datetime.timedelta(days=1)
     self.moderator.get_time.return_value = now
     emails = self.moderator.get_emails()
