@@ -146,7 +146,7 @@ class Moderator(object):
       phase_end = self.phase_end.time().strftime("%I:%M %p")
       players = "\n".join(["  " + p.name for p in self.game.players])
       body = "%s is over. %s actions are due by %s.\n\n"\
-             "Remaining players: %s" % \
+             "Remaining players:\n%s" % \
              (last_phase, self.phase, phase_end, players)
       self.send_email(mafia.events.PUBLIC, self.current_subject, body)
 
