@@ -5,14 +5,14 @@ A program for running games of [Mafia](http://wiki.mafiascum.net/).
 
 ## Installing
 
-1. Install Godfather:
+Install Godfather:
 ```sh
 sudo easy_install3 godfather
 ```
 
-2. Set up [Mailgun](https://www.mailgun.com).
+Set up [Mailgun](https://www.mailgun.com).
 
-3. Install your Mailgun API key:
+Install your Mailgun API key:
 ```sh
 echo MAILGUN_API_KEY > ~/.config/godfather/mailgun_key.txt
 ```
