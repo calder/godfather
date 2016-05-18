@@ -3,7 +3,7 @@ import flask
 import pytz
 
 # The maximum acceptable amount of time since the last email check.
-MAX_LATENCY = datetime.timedelta(minutes=0)
+MAX_LATENCY = datetime.timedelta(minutes=1)
 
 def Server(moderator):
   app = flask.Flask(__name__)
