@@ -16,11 +16,13 @@ SETUP_TEMPLATE = """
 \"\"\"This file defines the game setup.
 
 It will be imported and the following variables read:
-  game_name: The name of the game as it appears in email subjects.
-  time_zone: The time zone to report times in.
-  night_end: When night actions are resolved.
-  day_end:   When lynch votes are resolved.
-  game:      A mafia.Game object with the desired setup.
+  game_name:      The name of the game as it appears in email subjects.
+  moderator_name: The name of the sender for all moderator emails.
+  domain:         The domain to send email from.
+  time_zone:      The time zone to report times in.
+  night_end:      When night actions are resolved.
+  day_end:        When lynch votes are resolved.
+  game:           A mafia.Game object with the desired setup.
 \"\"\"
 
 import collections
@@ -31,10 +33,12 @@ import random
 from mafia import *
 
 # Basic game settings
-game_name = "Crypto Mafia"
-time_zone = pytz.timezone("US/Pacific-New")
-night_end = datetime.time(hour=10, minute=00, tzinfo=time_zone)
-day_end   = datetime.time(hour=12, minute=15, tzinfo=time_zone)
+game_name      = "Crypto Mafia"
+moderator_name = "The Godfather"
+domain         = "YourMailgunDomain.com"
+time_zone      = pytz.timezone("US/Pacific-New")
+night_end      = datetime.time(hour=10, minute=00, tzinfo=time_zone)
+day_end        = datetime.time(hour=12, minute=15, tzinfo=time_zone)
 
 # Random seeds
 setup_seed = %(setup_seed)d
@@ -152,10 +156,12 @@ def run(game_dir, setup_only):
     logging.info("Creating %s..." % game_path)
     moderator = Moderator(path=game_path,
                           game=setup.game,
-                          name=setup.game_name,
+                          game_name=setup.game_name,
                           time_zone=setup.time_zone,
                           night_end=setup.night_end,
                           day_end=setup.day_end,
+                          moderator_name=setup.moderator_name,
+                          domain=setup.domain,
                           mailgun_key=mailgun_key)
     pickle.dump(moderator, open(game_path, "wb"))
 

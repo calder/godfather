@@ -31,7 +31,9 @@ class ModeratorTest(CliTest):
     time_zone = pytz.timezone("US/Pacific-New")
     self.moderator = Moderator(path=self.game_path,
                                game=self.game,
-                               name="LOTR Mafia",
+                               game_name="LOTR Mafia",
+                               moderator_name="The Ghost of J.R.R. Tolkien",
+                               domain="exeter.ox.ac.uk",
                                time_zone=time_zone,
                                night_end=datetime.time(hour=10, tzinfo=time_zone),
                                day_end=datetime.time(hour=22, tzinfo=time_zone),

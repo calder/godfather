@@ -31,13 +31,16 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 class Moderator(object):
-  def __init__(self, *, path, game, name, time_zone, night_end, day_end, mailgun_key):
+  def __init__(self, *, path, game,
+               game_name, moderator_name,
+               time_zone, night_end, day_end,
+               domain, mailgun_key):
     assert day_end.tzinfo == time_zone
     assert night_end.tzinfo == time_zone
 
     self.path        = path
     self.game        = game
-    self.name        = name
+    self.name        = game_name
     self.time_zone   = time_zone
     self.night_end   = night_end
     self.day_end     = day_end
@@ -48,9 +51,9 @@ class Moderator(object):
     self.phase_end   = self.get_phase_end(start=self.get_time())
     self.last_fetch  = self.get_time()
     self.mailgun     = Mailgun(api_key=mailgun_key,
-                               sender="The Godfather",
+                               sender=moderator_name,
                                address=str(uuid.uuid4()),
-                               domain="caldercoalson.com")
+                               domain=domain)
 
     self.game.log.on_append(self.event_logged)
 
