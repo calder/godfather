@@ -3,7 +3,7 @@ from setuptools import *
 setup(
   # Metadata
   name="godfather",
-  version="0.1",
+  version="0.2",
   author="Calder Coalson",
   author_email="caldercoalson@gmail.com",
   url="https://github.com/calder/godfather",
@@ -19,6 +19,7 @@ setup(
   # Dependencies
   install_requires=[
     "click",
+    "flask",
     "mafia",
     "pluginbase",
     "pytz",
