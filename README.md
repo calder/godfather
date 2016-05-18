@@ -10,9 +10,7 @@ Install Godfather:
 sudo easy_install3 godfather
 ```
 
-Set up [Mailgun](https://www.mailgun.com).
-
-Install your Mailgun API key:
+Set up [Mailgun](https://www.mailgun.com), then install your Mailgun API key:
 ```sh
 echo MAILGUN_API_KEY > ~/.config/godfather/mailgun_key.txt
 ```
