@@ -7,8 +7,10 @@ import pickle
 import pluginbase
 import pytz
 import random
+import threading
 
 from .moderator import *
+from .server import *
 
 SETUP_TEMPLATE = """
 \"\"\"This file defines the game setup.
@@ -155,11 +157,19 @@ def run(game_dir, setup_only):
                           mailgun_key=mailgun_key)
     pickle.dump(moderator, open(game_path, "wb"))
 
+  # Load the moderator.
   moderator = load_game(game_path)
 
+  if setup_only:
+    return
+
+  # Start the server.
+  server = Server(moderator)
+  server_thread = threading.Thread(target=server.run, daemon=True)
+  server_thread.start()
+
   # Run the Moderator (runs until interrupted).
-  if not setup_only:
-    moderator.run()
+  moderator.run()
 
 @standard_options()
 def poke(game_dir):

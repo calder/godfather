@@ -7,15 +7,20 @@ setup(
   author="Calder Coalson",
   author_email="caldercoalson@gmail.com",
   url="https://github.com/calder/godfather",
-  description="A library for moderating games of Mafia.",
-  long_description="See https://github.com/calder/godfather/ for documentation.",
+  description="A CLI for running games of Mafia.",
+  long_description="See https://github.com/calder/godfather for documentation.",
 
   # Contents
   packages=find_packages(exclude=["*.test"]),
 
   # Dependencies
   install_requires=[
+    "click",
     "mafia",
+    "pluginbase",
+    "pytz",
+    "requests",
+    "termcolor",
   ],
   setup_requires=[
     "nose",

@@ -1,0 +1,13 @@
+{% include "header.html" %}
+
+<ul>
+{% for player in all_players %}
+  {% if player in players %}
+    <li>{{ player.name }}</li>
+  {% else %}
+    <li class="dead">{{ player.name }}</li>
+  {% endif %}
+{% endfor %}
+</ul>
+
+{% include "footer.html" %}

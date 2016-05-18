@@ -1,0 +1,7 @@
+body {
+  font-family: monospace;
+}
+
+.dead {
+  text-decoration: line-through;
+}
