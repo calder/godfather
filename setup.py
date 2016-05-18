@@ -12,6 +12,9 @@ setup(
 
   # Contents
   packages=find_packages(exclude=["*.test"]),
+  entry_points = {
+    "console_scripts": ["godfather=godfather.main:main"],
+  },
 
   # Dependencies
   install_requires=[
