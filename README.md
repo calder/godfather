@@ -50,4 +50,4 @@ nosetests
 - Add full-game integration test
 - Add public and private CC lists
 - Add action cancelling
-- Add timezone to setup.py
+- Add wills
