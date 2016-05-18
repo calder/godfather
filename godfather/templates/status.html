@@ -1,0 +1,16 @@
+{% include "header.html" %}
+
+<p>Status: {{ status }}</p>
+
+{% if errors %}
+  <p>
+  Errors:
+  <ul>
+  {% for error in errors %}
+    <li>{{ error }}</li>
+  {% endfor %}
+  </ul>
+  </p>
+{% endif %}
+
+{% include "footer.html" %}

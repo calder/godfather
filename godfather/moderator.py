@@ -4,7 +4,6 @@ import json
 import logging
 import mafia
 import pickle
-import pytz
 import requests
 import termcolor
 import signal
@@ -32,10 +31,14 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 class Moderator(object):
-  def __init__(self, *, path, game, name, night_end, day_end, mailgun_key):
+  def __init__(self, *, path, game, name, time_zone, night_end, day_end, mailgun_key):
+    assert day_end.tzinfo == time_zone
+    assert night_end.tzinfo == time_zone
+
     self.path        = path
     self.game        = game
     self.name        = name
+    self.time_zone   = time_zone
     self.night_end   = night_end
     self.day_end     = day_end
 
@@ -65,11 +68,11 @@ class Moderator(object):
     d = datetime.datetime.combine(start, time)
     if d < start:
       d += datetime.timedelta(days=1)
-    return d
+    return d.astimezone(self.time_zone)
 
   def get_time(self):
     """Return the current time."""
-    return datetime.datetime.now(pytz.UTC)
+    return datetime.datetime.now(self.time_zone)
 
   def run(self):
     """Run the game until it finishes or an interrupt is received."""

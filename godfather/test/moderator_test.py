@@ -28,11 +28,13 @@ class ModeratorTest(CliTest):
                                         info={"email": "mithrandir@meu.edu"})
     self.sauron  = self.game.add_player("Sauron", Godfather(self.mafia),
                                         info={"email": "sauron@mordor.gov"})
+    time_zone = pytz.timezone("US/Pacific-New")
     self.moderator = Moderator(path=self.game_path,
                                game=self.game,
                                name="LOTR Mafia",
-                               night_end=datetime.time(hour=10, tzinfo=pytz.UTC),
-                               day_end=datetime.time(hour=22, tzinfo=pytz.UTC),
+                               time_zone=time_zone,
+                               night_end=datetime.time(hour=10, tzinfo=time_zone),
+                               day_end=datetime.time(hour=22, tzinfo=time_zone),
                                mailgun_key="Fake Key")
     self.moderator.get_time = self.mocks.get_time = MagicMock()
     self.moderator.mailgun  = self.mocks.mailgun  = MagicMock()
@@ -173,8 +175,8 @@ class ModeratorFunctionalTest(ModeratorTest):
       call.send_email(Email(
         recipients=[self.address(self.sam), self.address(self.frodo)],
         subject="Test",
-        body="Test body.")
-      )
+        body="Test body.",
+      ))
     ])
 
   def test_get_emails(self):

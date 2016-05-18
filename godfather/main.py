@@ -17,6 +17,7 @@ SETUP_TEMPLATE = """
 
 It will be imported and the following variables read:
   game_name: The name of the game as it appears in email subjects.
+  time_zone: The time zone to report times in.
   night_end: When night actions are resolved.
   day_end:   When lynch votes are resolved.
   game:      A mafia.Game object with the desired setup.
@@ -152,6 +153,7 @@ def run(game_dir, setup_only):
     moderator = Moderator(path=game_path,
                           game=setup.game,
                           name=setup.game_name,
+                          time_zone=setup.time_zone,
                           night_end=setup.night_end,
                           day_end=setup.day_end,
                           mailgun_key=mailgun_key)
