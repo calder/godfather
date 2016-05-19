@@ -1,6 +1,6 @@
 # Godfather
 
-A program for running games of [Mafia](http://wiki.mafiascum.net/).
+A CLI for running games of [Mafia](http://wiki.mafiascum.net).
 
 
 ## Installing
@@ -56,6 +56,6 @@ nosetests
 ## TODO
 
 - Add full-game integration test
-- Add public and private CC lists
 - Add action cancelling
 - Add wills
+- Add builtin backup and restore

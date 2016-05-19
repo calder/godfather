@@ -33,6 +33,7 @@ signal.signal(signal.SIGINT, signal_handler)
 class Moderator(object):
   def __init__(self, *, path, game,
                game_name, moderator_name,
+               public_cc, private_cc,
                time_zone, night_end, day_end,
                domain, mailgun_key):
     assert day_end.tzinfo == time_zone
@@ -41,6 +42,10 @@ class Moderator(object):
     self.path        = path
     self.game        = game
     self.name        = game_name
+
+    self.public_cc   = public_cc
+    self.private_cc  = private_cc
+
     self.time_zone   = time_zone
     self.night_end   = night_end
     self.day_end     = day_end
@@ -159,14 +164,16 @@ class Moderator(object):
 
   def send_email(self, to, subject, body):
     """Send an email to a player, list of players, or everyone."""
+    cc = self.private_cc
     assert to
     if to == mafia.events.PUBLIC:
       to = self.game.all_players
+      cc = cc + self.public_cc
     if not isinstance(to, list):
       to = [to]
     recipients = ["%s <%s>" % (p.name, p.info["email"]) for p in to]
 
-    self.mailgun.send_email(Email(recipients=recipients, subject=subject, body=body))
+    self.mailgun.send_email(Email(recipients=recipients, cc=cc, subject=subject, body=body))
 
   def get_emails(self):
     """Return a list of emails received since the last check."""

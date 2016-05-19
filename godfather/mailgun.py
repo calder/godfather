@@ -40,6 +40,7 @@ class Mailgun(object):
         data={
           "from":    "%s <%s>" % (self.sender, self.email),
           "to":      email.recipients,
+          "cc":      email.get("cc", []),
           "subject": email.subject,
           "text":    email.body,
         })

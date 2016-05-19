@@ -34,6 +34,8 @@ class ModeratorTest(CliTest):
                                game_name="LOTR Mafia",
                                moderator_name="The Ghost of J.R.R. Tolkien",
                                domain="exeter.ox.ac.uk",
+                               public_cc=[],
+                               private_cc=[],
                                time_zone=time_zone,
                                night_end=datetime.time(hour=10, tzinfo=time_zone),
                                day_end=datetime.time(hour=22, tzinfo=time_zone),
@@ -145,8 +147,13 @@ class ModeratorUnitTest(ModeratorTest):
     next = datetime.datetime(year=2001, month=1, day=2, hour=12, tzinfo=pytz.timezone("Etc/GMT+1"))
     assert_equal(next, self.moderator.get_next_occurrence(now, time))
 
-class ModeratorFunctionalTest(ModeratorTest):
+class ModeratorEmailTest(ModeratorTest):
   """These tests mock out only time functions and the Mailgun object."""
+
+  def setUp(self):
+    super().setUp()
+    self.moderator.public_cc = ["public@gmail.com"]
+    self.moderator.private_cc = ["private@gmail.com"]
 
   def address(self, player):
     return "%s <%s>" % (player.name, player.info["email"])
@@ -156,6 +163,7 @@ class ModeratorFunctionalTest(ModeratorTest):
     assert_equal(self.moderator.mailgun.mock_calls, [
       call.send_email(Email(
         recipients=[self.address(p) for p in self.game.players],
+        cc=["private@gmail.com", "public@gmail.com"],
         subject="Test",
         body="Test body.")
       )
@@ -166,6 +174,7 @@ class ModeratorFunctionalTest(ModeratorTest):
     assert_equal(self.moderator.mailgun.mock_calls, [
       call.send_email(Email(
         recipients=[self.address(self.sam)],
+        cc=["private@gmail.com"],
         subject="Test",
         body="Test body.")
       )
@@ -176,6 +185,7 @@ class ModeratorFunctionalTest(ModeratorTest):
     assert_equal(self.moderator.mailgun.mock_calls, [
       call.send_email(Email(
         recipients=[self.address(self.sam), self.address(self.frodo)],
+        cc=["private@gmail.com"],
         subject="Test",
         body="Test body.",
       ))

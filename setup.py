@@ -3,7 +3,7 @@ from setuptools import *
 setup(
   # Metadata
   name="godfather",
-  version="0.2",
+  version="0.3",
   author="Calder Coalson",
   author_email="caldercoalson@gmail.com",
   url="https://github.com/calder/godfather",
@@ -12,6 +12,7 @@ setup(
 
   # Contents
   packages=find_packages(exclude=["*.test"]),
+  package_data={"godfather": ["static/*", "templates/*"]},
   entry_points = {
     "console_scripts": ["godfather=godfather.main:main"],
   },
@@ -35,5 +36,5 @@ setup(
 
   # Settings
   test_suite="nose.collector",
-  zip_safe=True,
+  zip_safe=False,
 )
