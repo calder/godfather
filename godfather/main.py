@@ -207,7 +207,7 @@ def poke(game_dir):
   game_path = os.path.join(game_dir, "game.pickle")
   moderator = load_game(game_path)
 
-  moderator.phase_end = datetime.datetime.now(pytz.UTC) - MAIL_DELIVERY_LAG
+  moderator.phase_end = datetime.datetime.now(moderator.time_zone) - MAIL_DELIVERY_LAG
   set_cancelled(True)
   moderator.run()
 
