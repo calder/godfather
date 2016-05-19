@@ -21,6 +21,7 @@ setup(
   install_requires=[
     "click",
     "flask",
+    "jinja2",
     "mafia",
     "pluginbase",
     "pytz",

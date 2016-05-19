@@ -49,7 +49,7 @@ godfather restore ~/mafia-game --backup ~/mafia-game/backups/my_backup.pickle
 
 Install dependencies:
 ```sh
-sudo easy_install3 install click flask mafia pluginbase pytz requests termcolor
+sudo easy_install3 install click flask jinja2 mafia pluginbase pytz requests termcolor
 ```
 
 Set up presubmit hooks:
