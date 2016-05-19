@@ -39,7 +39,7 @@ godfather log ~/mafia-game
 
 Install dependencies:
 ```sh
-sudo easy_install3 install callee click mafia nose
+sudo easy_install3 install click flask mafia pluginbase pytz requests termcolor
 ```
 
 Set up presubmit hooks:
