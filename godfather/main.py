@@ -107,10 +107,10 @@ def standard_options(*, game_dir_must_exist=True):
     return wrapper
   return decorator
 
-def load_game(game_path):
+def load_game(game_path, load_from=None):
   # Load game.pickle and check that it's valid.
   try:
-    moderator = pickle.load(open(game_path, "rb"))
+    moderator = pickle.load(open(load_from or game_path, "rb"))
     if not isinstance(moderator, Moderator):
       raise click.ClickException("'%s is not a Moderator object." % game_path)
     moderator.path = game_path
@@ -139,7 +139,8 @@ def init(game_dir):
     })
 
 @standard_options()
-@click.option("--setup_only", is_flag=True)
+@click.option("--setup_only", is_flag=True,
+              help="Create the game.pickle file without running anything.")
 def run(game_dir, setup_only):
   """Run the game to completion or ctrl-c, saving checkpoints regularly."""
 
@@ -151,6 +152,11 @@ def run(game_dir, setup_only):
     mailgun_key = open(mailgun_key_path).read().strip()
   else:
     raise click.ClickException("Must create %s." % mailgun_key_path)
+
+  # Create backup directory if it doesn't exist.
+  backup_dir = os.path.join(game_dir, "backups")
+  logging.info("Creating %s..." % backup_dir)
+  os.makedirs(backup_dir, exist_ok=True)
 
   # Create game.pickle if it doesn't exist.
   setup_path = os.path.join(game_dir, "setup.py")
@@ -218,3 +224,12 @@ def log(game_dir):
   moderator = pickle.load(open(game_path, "rb"))
   if len(moderator.game.log) > 0:
     print(moderator.game.log)
+
+@standard_options()
+@click.option("--backup", type=str, required=True, help="The game file to restore.")
+def restore(game_dir, backup):
+  """Overwrite the game.pickle file with the given backup."""
+
+  game_path = os.path.join(game_dir, "game.pickle")
+  moderator = load_game(game_path, load_from=backup)
+  moderator.save()

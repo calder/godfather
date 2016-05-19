@@ -3,6 +3,7 @@ import datetime
 import json
 import logging
 import mafia
+import os
 import pickle
 import requests
 import termcolor
@@ -33,7 +34,7 @@ signal.signal(signal.SIGINT, signal_handler)
 class Moderator(object):
   def __init__(self, *, path, game,
                game_name, moderator_name,
-               public_cc, private_cc,
+               public_cc=None, private_cc=None,
                time_zone, night_end, day_end,
                domain, mailgun_key):
     assert day_end.tzinfo == time_zone
@@ -43,8 +44,8 @@ class Moderator(object):
     self.game        = game
     self.name        = game_name
 
-    self.public_cc   = public_cc
-    self.private_cc  = private_cc
+    self.public_cc   = public_cc or []
+    self.private_cc  = private_cc or []
 
     self.time_zone   = time_zone
     self.night_end   = night_end
@@ -110,6 +111,13 @@ class Moderator(object):
     """Save the current Moderator state to disk."""
     pickle.dump(self, open(self.path, "wb"))
 
+  def save_checkpoint(self, name):
+    """Save the current Moderator state to a checkpoint file."""
+    timestamp = datetime.datetime.now(self.time_zone).strftime("%Y-%m-%d %H:%M:%S")
+    backup_dir = os.path.join(os.path.dirname(self.path), "backups")
+    checkpoint_path = os.path.join(backup_dir, "game %s %s.pickle" % (timestamp, name))
+    pickle.dump(self, open(checkpoint_path, "wb"))
+
   def sleep(self):
     """Pause for a few seconds, and return whether execution should continue."""
     for i in range(10):
@@ -119,14 +127,16 @@ class Moderator(object):
 
   def start(self):
     """Start the game and send out role emails."""
+    self.save_checkpoint("Setup")
+
     logging.info("Starting game...")
-    players = "\n".join(["  " + p.name for p in self.game.all_players])
+    players = "\n".join(["  %s <%s>" % (p.name, p.info["email"]) for p in self.game.all_players])
     welcome = "Welcome to %s. You will receive your roles via email shortly." \
               "You may discuss them all you like, but under no circumstances " \
               "may you show another player any email you receive from me.\n\n" \
-              "Night 0 begins tonight.\n" \
               "Night actions are due by %s.\n" \
               "Day actions are due by %s.\n\n" \
+              "Night 0 begins tonight.\n\n" \
               "Your fellow players:\n%s" % (
                 self.name,
                 self.night_end.strftime("%I:%M %p"),
@@ -136,6 +146,8 @@ class Moderator(object):
     self.send_email(mafia.events.PUBLIC, "%s: Welcome" % self.name, welcome)
     self.game.begin()
     self.started = True
+
+    self.save_checkpoint("Start")
 
   def end(self):
     """End the game and send out congratulation emails."""
@@ -161,6 +173,8 @@ class Moderator(object):
              "Remaining players:\n%s" % \
              (last_phase, self.phase, phase_end, players)
       self.send_email(mafia.events.PUBLIC, self.current_subject, body)
+
+    self.save_checkpoint(str(self.phase))
 
   def send_email(self, to, subject, body):
     """Send an email to a player, list of players, or everyone."""

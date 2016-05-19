@@ -34,8 +34,6 @@ class ModeratorTest(CliTest):
                                game_name="LOTR Mafia",
                                moderator_name="The Ghost of J.R.R. Tolkien",
                                domain="exeter.ox.ac.uk",
-                               public_cc=[],
-                               private_cc=[],
                                time_zone=time_zone,
                                night_end=datetime.time(hour=10, tzinfo=time_zone),
                                day_end=datetime.time(hour=22, tzinfo=time_zone),
@@ -52,9 +50,10 @@ class ModeratorUnitTest(ModeratorTest):
   def setUp(self):
     super().setUp()
     self.emails = []
-    self.moderator.save       = self.mocks.save       = MagicMock()
-    self.moderator.send_email = self.mocks.send_email = MagicMock()
-    self.moderator.get_emails = self.mocks.get_emails = MagicMock()
+    self.moderator.save            = self.mocks.save            = MagicMock()
+    self.moderator.save_checkpoint = self.mocks.save_checkpoint = MagicMock()
+    self.moderator.send_email      = self.mocks.send_email      = MagicMock()
+    self.moderator.get_emails      = self.mocks.get_emails      = MagicMock()
     self.moderator.get_emails.side_effect = self.get_and_clear_emails
 
   def get_and_clear_emails(self):
@@ -147,8 +146,11 @@ class ModeratorUnitTest(ModeratorTest):
     next = datetime.datetime(year=2001, month=1, day=2, hour=12, tzinfo=pytz.timezone("Etc/GMT+1"))
     assert_equal(next, self.moderator.get_next_occurrence(now, time))
 
+class ModeratorSaveTest(ModeratorTest):
+  """Test save and save_checkpoint."""
+
 class ModeratorEmailTest(ModeratorTest):
-  """These tests mock out only time functions and the Mailgun object."""
+  """Test get_emails and send_emails with a mocked out Mailgun object."""
 
   def setUp(self):
     super().setUp()
