@@ -19,14 +19,10 @@ def main():
 
 class Lock(object):
   def __init__(self, game_dir):
-    self.game_dir_exists = os.path.isdir(game_dir)
     self.lock_file = os.path.join(game_dir, "game.lock")
 
   def __enter__(self):
     """Lock the game directory."""
-    if not self.game_dir_exists:
-      return
-
     if os.path.isfile(self.lock_file):
       raise click.ClickException(
         "Game lock is already held. " \
@@ -37,12 +33,9 @@ class Lock(object):
 
   def __exit__(self, type, value, traceback):
     """Unlock game directory."""
-    if not self.game_dir_exists:
-      return
-
     os.remove(self.lock_file)
 
-def standard_options(*, game_dir_must_exist=True):
+def standard_options(*, game_dir_must_exist=True, lock_required=True):
   def decorator(f):
     @main.command()
     @click.option("-v", "--verbose", is_flag=True)
@@ -61,7 +54,10 @@ def standard_options(*, game_dir_must_exist=True):
                           datefmt="%Y-%m-%d %H:%M:%S:")
 
       # Run the actual command.
-      with Lock(game_dir):
+      if lock_required:
+        with Lock(game_dir):
+          f(game_dir=game_dir, **kwargs)
+      else:
         f(game_dir=game_dir, **kwargs)
 
     return wrapper
@@ -78,7 +74,7 @@ def load_game(game_path, load_from=None):
   except pickle.UnpicklingError:
     raise click.ClickException("%s is not a valid game file." % game_path)
 
-@standard_options(game_dir_must_exist=False)
+@standard_options(game_dir_must_exist=False, lock_required=False)
 def init(game_dir):
   """Initialize the game directory."""
 
@@ -173,7 +169,7 @@ def poke(game_dir):
   set_cancelled(True)
   moderator.run()
 
-@standard_options()
+@standard_options(lock_required=False)
 def log(game_dir):
   """Show the game log so far."""
 
