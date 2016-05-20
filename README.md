@@ -68,4 +68,3 @@ nosetests
 - Add full-game integration test
 - Add action cancelling
 - Add wills
-- Add game directory locking
