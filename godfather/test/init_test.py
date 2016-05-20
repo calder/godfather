@@ -13,13 +13,13 @@ class InitTest(CliTest):
     os.rmdir(self.game_dir)
     assert not os.path.isdir(self.game_dir)
 
-    self.godfather(["init", self.game_dir])
+    exec_godfather(["init", self.game_dir])
     assert os.path.isdir(self.game_dir)
     assert os.path.isfile(os.path.join(self.game_dir, "setup.py"))
 
   def test_game_dir_exists(self):
     """'init' should succeed even if the game directory already exists."""
-    self.godfather(["init", self.game_dir])
+    exec_godfather(["init", self.game_dir])
     assert os.path.isfile(os.path.join(self.game_dir, "setup.py"))
 
   def test_setup_py(self):
@@ -27,7 +27,7 @@ class InitTest(CliTest):
     setup_path = os.path.join(self.game_dir, "setup.py")
     game_path = os.path.join(self.game_dir, "game.pickle")
 
-    self.godfather(["init", self.game_dir])
+    exec_godfather(["init", self.game_dir])
 
     plugin_base = pluginbase.PluginBase(package="plugins")
     plugin_source = plugin_base.make_plugin_source(searchpath=[self.game_dir])
@@ -41,5 +41,5 @@ class InitTest(CliTest):
     setup_path = os.path.join(self.game_dir, "setup.py")
     open(setup_path, "w").write("foobar")
 
-    self.godfather(["init", self.game_dir])
+    exec_godfather(["init", self.game_dir])
     self.assertEqual("foobar", open(setup_path).read())

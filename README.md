@@ -7,8 +7,8 @@ A CLI for running games of [Mafia](http://wiki.mafiascum.net).
 
 Install Godfather:
 ```sh
-sudo apt-get install python3-setuptools
-sudo easy_install3 godfather
+sudo apt-get install python3-pip
+sudo pip3 install --upgrade godfather
 ```
 
 Set up [Mailgun](https://www.mailgun.com), then install your Mailgun API key:
@@ -49,7 +49,7 @@ godfather restore ~/mafia-game --backup ~/mafia-game/backups/my_backup.pickle
 
 Install dependencies:
 ```sh
-sudo easy_install3 install click flask jinja2 mafia pluginbase pytz requests termcolor
+sudo pip3 install --upgrade click flask jinja2 mafia nose pluginbase pytest pytz requests termcolor
 ```
 
 Set up presubmit hooks:

@@ -17,6 +17,31 @@ from .server import *
 def main():
   pass
 
+class Lock(object):
+  def __init__(self, game_dir):
+    self.game_dir_exists = os.path.isdir(game_dir)
+    self.lock_file = os.path.join(game_dir, "game.lock")
+
+  def __enter__(self):
+    """Lock the game directory."""
+    if not self.game_dir_exists:
+      return
+
+    if os.path.isfile(self.lock_file):
+      raise click.ClickException(
+        "Game lock is already held. " \
+        "Delete %s if you're sure nothing else is using it." % self.lock_file
+      )
+    else:
+      open(self.lock_file, "a").close()
+
+  def __exit__(self, type, value, traceback):
+    """Unlock game directory."""
+    if not self.game_dir_exists:
+      return
+
+    os.remove(self.lock_file)
+
 def standard_options(*, game_dir_must_exist=True):
   def decorator(f):
     @main.command()
@@ -28,12 +53,17 @@ def standard_options(*, game_dir_must_exist=True):
                                     writable=True,
                                     exists=game_dir_must_exist))
     @functools.wraps(f)
-    def wrapper(verbose, *args, **kwargs):
+    def wrapper(verbose, *, game_dir, **kwargs):
+      # Configure logging.
       level = logging.DEBUG if verbose else logging.INFO
       logging.basicConfig(level=level,
                           format="%(asctime)s %(message)s",
                           datefmt="%Y-%m-%d %H:%M:%S:")
-      f(*args, **kwargs)
+
+      # Run the actual command.
+      with Lock(game_dir):
+        f(game_dir=game_dir, **kwargs)
+
     return wrapper
   return decorator
 

@@ -32,7 +32,7 @@ setup(
     "nose",
   ],
   tests_require=[
-    "nose-parameterized",
+    "pytest",
   ],
 
   # Settings

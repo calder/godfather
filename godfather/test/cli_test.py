@@ -44,21 +44,20 @@ class CliTest(GodfatherTest):
   def setup_path(self):
     return os.path.join(self.game_dir, "setup.py")
 
-  def exec(self, command):
-    """Run a command and assert that it passes."""
-    result = subprocess.run(command)
-    result.check_returncode()
-    return result.stdout
+def exec(command):
+  """Run a command and assert that it passes."""
+  result = subprocess.run(command)
+  result.check_returncode()
+  return result.stdout
 
-  def godfather(self, command, *, in_process=True):
-    """Run 'godfather [command]' either within the process or in a shell."""
-    if in_process:
-      runner = click.testing.CliRunner()
-      result = runner.invoke(godfather.main.main, command + ["--verbose"])
-      print(result.output)
-      if result.exception:
-        raise result.exception
-      self.assertEqual(0, result.exit_code)
-      return result.output
-    else:
-      return self.exec(["python3", "godfather"] + command)
+def exec_godfather(command, *, in_process=True):
+  """Run 'godfather [command]' either within the process or in a shell."""
+  if in_process:
+    runner = click.testing.CliRunner()
+    result = runner.invoke(godfather.main.main, command + ["--verbose"])
+    if result.exception:
+      raise result.exception
+    mafia.assert_equal(0, result.exit_code)
+    return result.output
+  else:
+    return self.exec(["python3", "godfather"] + command)
