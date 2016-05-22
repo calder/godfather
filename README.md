@@ -68,3 +68,4 @@ nosetests
 - Add full-game integration test
 - Add action cancelling
 - Add wills
+- Add mail push

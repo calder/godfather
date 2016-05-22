@@ -60,6 +60,7 @@ class Moderator(object):
                                sender=moderator_name,
                                address=str(uuid.uuid4()),
                                domain=domain)
+    self.parser      = mafia.Parser(self.game)
 
     self.game.log.on_append(self.event_logged)
 
@@ -226,7 +227,7 @@ class Moderator(object):
     logging.info("%s %s" % (prefix, email))
 
     try:
-      self.phase.add_parsed(email.sender, action, game=self.game)
+      self.parser.parse(self.phase, email.sender, action)
       if isinstance(self.phase, mafia.Day):
         voters = sorted([p for p in self.phase.votes.keys() if p and p.alive])
         votes = "\n".join(["  %s votes for %s." % (p, self.phase.votes[p]) for p in voters])

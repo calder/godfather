@@ -90,7 +90,7 @@ class ModeratorUnitTest(ModeratorTest):
       self.emails.append(Email(sender=self.sauron, subject="Mafia", body="Sauron: Kill Frodo."))
       yield True
       self.assert_sent_emails([
-        call(self.sam, "Mafia", "No actions available.\n\n> protect frodo"),
+        call(self.sam, "Mafia", "Invalid action.\n\n> protect frodo"),
         call(self.sauron, "Mafia", "Confirmed: sauron: kill frodo"),
       ])
 
@@ -108,7 +108,7 @@ class ModeratorUnitTest(ModeratorTest):
       yield True
       self.assert_sent_emails([
         call(events.PUBLIC, "LOTR Mafia: Day 1", "Current votes:\n  Samwise votes for Sauron."),
-        call(self.sauron, "Mafia", StartsWith("Votes must take the form:")),
+        call(self.sauron, "Mafia", "Invalid action.\n\n> grrrrrrrrr"),
       ])
 
       # Pass 5: Advance the clock so day resolves.
