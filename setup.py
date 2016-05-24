@@ -28,14 +28,10 @@ setup(
     "requests",
     "termcolor",
   ],
-  setup_requires=[
-    "nose",
-  ],
   tests_require=[
     "pytest",
   ],
 
   # Settings
-  test_suite="nose.collector",
   zip_safe=False,
 )

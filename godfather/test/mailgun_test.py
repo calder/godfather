@@ -1,5 +1,4 @@
 import datetime
-import nose
 import functools
 import os
 import pytest
@@ -8,7 +7,6 @@ import time
 import unittest
 import uuid
 
-from nose.plugins.attrib import attr
 from mafia import assert_equal
 from unittest.mock import call, MagicMock
 
