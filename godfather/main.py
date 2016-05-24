@@ -181,7 +181,8 @@ def log(game_dir):
   logging.info("Reading log from %s..." % game_path)
   moderator = pickle.load(open(game_path, "rb"))
   if len(moderator.game.log) > 0:
-    print(moderator.game.log)
+    for event in moderator.game.log:
+      print(event)
 
 @standard_options()
 @click.option("--backup", type=str, required=True, help="The game file to restore.")
