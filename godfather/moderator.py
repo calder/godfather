@@ -132,18 +132,12 @@ class Moderator(object):
     self.save_checkpoint("Setup")
 
     logging.info("Starting game...")
-    players = "\n".join(["  %s <%s>" % (p.name, p.info["email"]) for p in self.game.all_players])
-    welcome = "Welcome to %s. You will receive your roles via email shortly." \
-              "You may discuss them all you like, but under no circumstances " \
-              "may you show another player any email you receive from me.\n\n" \
-              "Night actions are due by %s.\n" \
-              "Day actions are due by %s.\n\n" \
-              "Night 0 begins tonight.\n\n" \
-              "Your fellow players:\n%s" % (
-                self.name,
-                self.night_end.strftime("%I:%M %p"),
-                self.day_end.strftime("%I:%M %p"),
-                players
+    welcome = render_email(
+                "welcome.html",
+                game_name=self.name,
+                night_end=self.night_end.strftime("%I:%M %p"),
+                day_end=self.day_end.strftime("%I:%M %p"),
+                players=self.game.players,
               )
     self.send_email(mafia.events.PUBLIC, "%s: Welcome" % self.name, welcome)
     self.game.begin()
