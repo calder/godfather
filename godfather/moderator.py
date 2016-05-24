@@ -12,6 +12,7 @@ import sys
 import time
 import uuid
 
+from .emails import *
 from .mailgun import *
 
 # Mailgun does not guarantee that received messages will be immediately
@@ -218,7 +219,7 @@ class Moderator(object):
     logging.info("%s %s" % (prefix, event.colored_str()))
     if event.to:
       subject = "%s: %s" % (self.name, event.phase)
-      self.send_email(event.to, subject, event.full_message)
+      self.send_email(event.to, subject, event_email(event))
 
   def email_received(self, email):
     """Called when an email is received from a player."""

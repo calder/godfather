@@ -18,8 +18,8 @@ class ModeratorTest(CliTest):
     self.mocks   = MagicMock()
     self.game    = Game()
     self.town    = self.game.add_faction(Town())
-    self.masons  = self.game.add_faction(Masonry("Fellowship", self.town))
-    self.mafia   = self.game.add_faction(Mafia("Forces of Darkness"))
+    self.masons  = self.game.add_faction(Masonry("The Fellowship", self.town))
+    self.mafia   = self.game.add_faction(Mafia("The Forces of Darkness"))
     self.frodo   = self.game.add_player("Frodo", Villager(self.masons),
                                         info={"email": "frodo@bagend.shire"})
     self.sam     = self.game.add_player("Samwise", Villager(self.masons),
@@ -76,12 +76,12 @@ class ModeratorUnitTest(ModeratorTest):
       subject = "LOTR Mafia: Start"
       self.assert_sent_emails([
         call(events.PUBLIC, "LOTR Mafia: Welcome", StartsWith("Welcome to LOTR Mafia.")),
-        call([self.frodo],   subject, StartsWith("You are the Mason Villager.")),
-        call([self.gandalf], subject, StartsWith("You are the Town Cop.")),
-        call([self.sam],     subject, StartsWith("You are the Mason Villager.")),
-        call([self.sauron],  subject, StartsWith("You are the Mafia Godfather.")),
-        call([self.frodo, self.sam], subject, "Frodo and Samwise, you are the Fellowship."),
-        call([self.sauron],  subject, StartsWith("You are the leader of the Forces of Darkness."))
+        call([self.frodo],   subject, StartsWith("You are the <b>Mason Villager</b>.")),
+        call([self.gandalf], subject, StartsWith("You are the <b>Town Cop</b>.")),
+        call([self.sam],     subject, StartsWith("You are the <b>Mason Villager</b>.")),
+        call([self.sauron],  subject, StartsWith("You are the <b>Mafia Godfather</b>.")),
+        call([self.frodo, self.sam], subject, "You are The Fellowship."),
+        call([self.sauron],  subject, StartsWith("You are the leader of The Forces of Darkness."))
       ])
       assert self.moderator.started
 
