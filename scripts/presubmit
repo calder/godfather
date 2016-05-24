@@ -2,21 +2,23 @@
 
 cd "`dirname "$0"`"/..
 
-nosetests || exit 1
+RED=`tput setaf 1`
+GREEN=`tput setaf 2`
+RESET=`tput sgr0`
+
+py.test || exit 1
 
 echo
 ! grep -r "print(" godfather/*.py \
   --exclude=godfather/main.py \
-  || { echo "\nFAIL: Remove leftover print statements before committing."; exit 1; }
+  || { echo "\n${RED}FAIL${RESET}: Remove leftover print statements before committing."; exit 1; }
 
 echo
 ! grep -r "debug=True" godfather/*.py godfather/*/*.py \
-  || { echo "\nFAIL: Remove leftover 'debug=True's before committing."; exit 1; }
+  || { echo "\n${RED}FAIL${RESET}: Remove leftover 'debug=True's before committing."; exit 1; }
 
 echo
 ! grep -r "key-" godfather/*.py godfather/*/*.py \
-  || { echo "\nFAIL: Remove keys before committing."; exit 1; }
+  || { echo "\n${RED}FAIL${RESET}: Remove keys before committing."; exit 1; }
 
-GREEN=`tput setaf 2`
-RESET=`tput sgr0`
 echo "Presubmits ${GREEN}PASSED${RESET}.\n"

@@ -49,7 +49,7 @@ godfather restore ~/mafia-game --backup ~/mafia-game/backups/my_backup.pickle
 
 Install dependencies:
 ```sh
-sudo pip3 install --upgrade click flask jinja2 mafia nose pluginbase pytest pytz requests termcolor
+sudo pip3 install --upgrade click flask jinja2 mafia pluginbase pytest pytz requests termcolor
 ```
 
 Set up presubmit hooks:
@@ -59,7 +59,11 @@ scripts/install-git-hooks
 
 Run tests:
 ```sh
-nosetests
+# Run all unit tests.
+py.test
+
+# Run Mailgun integration tests.
+py.test -m mailgun
 ```
 
 

@@ -2,6 +2,7 @@ import datetime
 import nose
 import functools
 import os
+import pytest
 import pytz
 import time
 import unittest
@@ -32,18 +33,18 @@ class MailgunTest(unittest.TestCase):
                             address=str(uuid.uuid4()),
                             domain="caldercoalson.com")
 
-  @attr("test-mailgun")
+  @pytest.mark.mailgun
   def test_send(self):
     start = datetime.datetime.now(pytz.UTC)
     self.mailgun1.send_email(Email(
       recipients=["%s@%s" % (self.mailgun2.address, self.mailgun2.domain)],
       cc=["%s@%s" % (self.mailgun3.address, self.mailgun3.domain)],
-      subject="Test", body="ohai."))
+      subject="Test", body="<b>ohai</b>."))
     time.sleep(1)
     self.mailgun1.send_email(Email(
       recipients=["%s@%s" % (self.mailgun2.address, self.mailgun2.domain)],
       cc=["%s@%s" % (self.mailgun3.address, self.mailgun3.domain)],
-      subject="Test", body="kthxbai."))
+      subject="Test", body="<b>kthxbai</b>."))
     end = datetime.datetime.now(pytz.UTC) + datetime.timedelta(minutes=1)
 
     while datetime.datetime.now(pytz.UTC) < end:

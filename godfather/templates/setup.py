@@ -15,7 +15,8 @@ It will be imported and the following variables read:
 
   game:           A mafia.Game object with the desired setup.
 
-For a complete list of roles, see https://github.com/calder/mafia.
+For a complete list of roles, see
+https://github.com/calder/mafia/blob/master/doc/roles.md
 """
 
 import collections
@@ -50,9 +51,9 @@ def add_player(role):
 
 # Player list
 players = [
-  Player(name="Alice", email="alice@gmail.com"),
-  Player(name="Bob", email="bob@gmail.com"),
-  Player(name="Eve", email="eve@gmail.com"),
+  Player(name="Alice", email="caldercoalson@gmail.com"),
+  Player(name="Bob", email="caldercoalson@gmail.com"),
+  Player(name="Eve", email="caldercoalson@gmail.com"),
 ]
 random.Random(setup_seed).shuffle(players)
 
