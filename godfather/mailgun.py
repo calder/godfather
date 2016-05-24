@@ -28,8 +28,12 @@ class Mailgun(object):
     return "%s@%s" % (self.address, self.domain)
 
   def strip_html(self, body):
-    tag = re.compile(r"<\w+?>|</\w+?>")
-    return tag.sub("", body)
+    body = re.sub(r"\n +", "\n", body)
+    body = re.sub(r"</h2>", ":", body)
+    body = re.sub(r"<li>", "  - ", body)
+    body = re.sub(r"\n</?ul>\n", "\n", body)
+    body = re.sub(r"<\w+?>|</\w+?>", "", body)
+    return body
 
   def send_email(self, email):
     """Send an email or raise an exception if unable."""
@@ -37,8 +41,7 @@ class Mailgun(object):
     logging.info("Sending email:")
     logging.info("  To:      %s" % ", ".join(email.recipients))
     logging.info("  Subject: %s" % email.subject)
-    logging.info("  Body:\n%s" % email.body)
-    logging.info("  Text:\n%s" % self.strip_html(email.body))
+    logging.info("  Body:\n%s" % self.strip_html(email.body))
 
     result = requests.post(
         "https://api.mailgun.net/v3/%s/messages" % self.domain,

@@ -219,7 +219,7 @@ class Moderator(object):
     logging.info("%s %s" % (prefix, event.colored_str()))
     if event.to:
       subject = "%s: %s" % (self.name, event.phase)
-      self.send_email(event.to, subject, event_email(event))
+      self.send_email(event.to, subject, event_email(event, parser=self.parser))
 
   def email_received(self, email):
     """Called when an email is received from a player."""

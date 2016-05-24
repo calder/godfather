@@ -1,1 +1,23 @@
 You are {%- if not initial %}now{% endif %} the <b>{{ role }}</b>.
+
+{% if abilities|length > 1 %}
+  <h2>Abilities</h2>
+  <ul>
+  {% for ability in abilities %}
+    <li>{{ ability }}</li>
+  {% endfor %}
+  </ul>
+{% else %}
+  <h2>Ability</h2>
+  {{ abilities[0] }}
+{% endif %}
+
+<h2>Win Condition</h2>
+{{ objective }}
+
+<h2>Commands</h2>
+<ul>
+{% for command in commands %}
+  <li><pre>{{ command }}</pre></li>
+{% endfor %}
+</ul>

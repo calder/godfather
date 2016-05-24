@@ -1,1 +1,3 @@
-{}
+{
+  "godfather/test/moderator_test.py::ModeratorUnitTest::test_simple_game": true
+}
