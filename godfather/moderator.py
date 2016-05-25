@@ -234,6 +234,13 @@ class Moderator(object):
     except mafia.InvalidAction as e:
       body = "%s\n\n> %s" % (str(e), action)
       self.send_email(email.sender, email.subject, body)
+    except mafia.HelpRequested:
+      roles = self.game.log.to(email.sender).type(mafia.events.RoleAnnouncement)
+      if len(roles) == 0:
+        logging.warning("Could not find role announcement for player: %s" % email.sender)
+      else:
+        body = event_email(roles[-1], parser=self.parser)
+        self.send_email(email.sender, email.subject, body)
 
   @property
   def current_subject(self):

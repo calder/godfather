@@ -85,6 +85,13 @@ class ModeratorUnitTest(ModeratorTest):
       ])
       assert self.moderator.started
 
+      # Pass 1.5: Sauron is confused.
+      self.emails.append(Email(sender=self.sauron, subject="???", body="Help me!"))
+      yield True
+      self.assert_sent_emails([
+        call(self.sauron, "???", Glob("*sauron: kill PLAYER*")),
+      ])
+
       # Pass 2: Send in some action emails.
       self.emails.append(Email(sender=self.sam, subject="Mafia", body="Protect Frodo!"))
       self.emails.append(Email(sender=self.sauron, subject="Mafia", body="Sauron: Kill Frodo."))
