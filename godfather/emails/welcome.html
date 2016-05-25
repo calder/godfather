@@ -2,11 +2,11 @@ Welcome to <b>{{ game_name }}</b>. You will receive your secret role shortly. Ni
 
 <h2>Rules</h2>
 <li>Under no circumstances may you show another player any email you receive from me.</li>
+<li>For general Mafia rules, check out http://wiki.mafiascum.net</li>
 <li>Night actions are due by <b>{{ night_end }}</b>.</li>
 <li>Day actions are due by <b>{{ day_end }}</b>.</li>
-<li>For general Mafia rules, check out http://wiki.mafiascum.net</li>
 
 <h2>Players</h2>
 {% for player in players %}
-  <li>{{ player.name }} &lt{{ player.info["email"] }}&gt</li>
+  <li>{{ player.name }} &lt;{{ player.info["email"] }}&gt;</li>
 {% endfor %}

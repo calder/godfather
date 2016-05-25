@@ -29,6 +29,8 @@ class Mailgun(object):
 
   def strip_html(self, body):
     body = re.sub(r"\n +", "\n", body)
+    body = re.sub(r"&lt;", "<", body)
+    body = re.sub(r"&gt;", ">", body)
     body = re.sub(r"</h2>", ":", body)
     body = re.sub(r"<li>", "  - ", body)
     body = re.sub(r"\n</?ul>\n", "\n", body)
