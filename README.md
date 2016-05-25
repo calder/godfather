@@ -70,6 +70,4 @@ py.test -m mailgun
 ## TODO
 
 - Add full-game integration test
-- Add action cancelling
-- Add wills
 - Add mail push
