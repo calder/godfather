@@ -3,7 +3,7 @@ from setuptools import *
 setup(
   # Metadata
   name="godfather",
-  version="0.4",
+  version="0.5",
   author="Calder Coalson",
   author_email="caldercoalson@gmail.com",
   url="https://github.com/calder/godfather",
@@ -12,7 +12,11 @@ setup(
 
   # Contents
   packages=find_packages(exclude=["*.test"]),
-  package_data={"godfather": ["static/*", "templates/*"]},
+  package_data={"godfather": [
+    "emails/*",
+    "static/*",
+    "templates/*",
+  ]},
   entry_points = {
     "console_scripts": ["godfather=godfather.main:main"],
   },
