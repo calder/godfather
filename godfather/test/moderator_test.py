@@ -97,15 +97,15 @@ class ModeratorUnitTest(ModeratorTest):
       self.emails.append(Email(sender=self.sauron, subject="Mafia", body="Sauron: Kill Frodo."))
       yield True
       self.assert_sent_emails([
-        call(self.sam, "Mafia", "Invalid action.\n\n> protect frodo"),
-        call(self.sauron, "Mafia", "Confirmed: sauron: kill frodo"),
+        call(self.sam, "Mafia", "Invalid action.\n\n> Protect Frodo!"),
+        call(self.sauron, "Mafia", "Confirmed.\n\n> Sauron: Kill Frodo."),
       ])
 
       # Pass 3: Advance the clock so night resolves.
       self.advance_phase()
       yield True
       self.assert_sent_emails([
-        call(events.PUBLIC, "LOTR Mafia: Night 0", "Frodo, the Mason Villager, has died."),
+        call(events.PUBLIC, "LOTR Mafia: Night 0", "Frodo, the <b>Mason Villager</b>, has died."),
         call(events.PUBLIC, "LOTR Mafia: Day 1", StartsWith("Night 0 is over. Day 1 actions are due by 10:00 PM.")),
       ])
 
@@ -115,14 +115,14 @@ class ModeratorUnitTest(ModeratorTest):
       yield True
       self.assert_sent_emails([
         call(events.PUBLIC, "LOTR Mafia: Day 1", "Current votes:\n  Samwise votes for Sauron."),
-        call(self.sauron, "Mafia", "Invalid action.\n\n> grrrrrrrrr"),
+        call(self.sauron, "Mafia", "Invalid action.\n\n> GRRRRRRRRR"),
       ])
 
       # Pass 5: Advance the clock so day resolves.
       self.advance_phase()
       yield True
       self.assert_sent_emails([
-        call(events.PUBLIC, "LOTR Mafia: Day 1", "Sauron, the Mafia Godfather, was lynched."),
+        call(events.PUBLIC, "LOTR Mafia: Day 1", "Sauron, the <b>Mafia Godfather</b>, was lynched."),
         call(events.PUBLIC, "LOTR Mafia: The End", Glob("*Congratulations to Frodo, Gandalf and Samwise*")),
       ])
 

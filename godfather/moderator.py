@@ -217,22 +217,21 @@ class Moderator(object):
 
   def email_received(self, email):
     """Called when an email is received from a player."""
-    action = email.body.strip().split("\n")[0].strip().strip(".!?>").lower()
     prefix = termcolor.colored("◀◀◀", "yellow")
     logging.info("%s %s" % (prefix, email))
 
     try:
-      self.parser.parse(self.phase, email.sender, action)
+      self.parser.parse(self.phase, email.sender, email.body)
       if isinstance(self.phase, mafia.Day):
         voters = sorted([p for p in self.phase.votes.keys() if p and p.alive])
         votes = "\n".join(["  %s votes for %s." % (p, self.phase.votes[p]) for p in voters])
         body = "Current votes:\n%s" % votes
         self.send_email(mafia.events.PUBLIC, self.current_subject, body)
       else:
-        body = "Confirmed: %s" % action
+        body = "Confirmed.\n\n> %s" % email.body
         self.send_email(email.sender, email.subject, body)
     except mafia.InvalidAction as e:
-      body = "%s\n\n> %s" % (str(e), action)
+      body = "%s\n\n> %s" % (str(e), email.body)
       self.send_email(email.sender, email.subject, body)
     except mafia.HelpRequested:
       roles = self.game.log.to(email.sender).type(mafia.events.RoleAnnouncement)
