@@ -1,4 +1,5 @@
 import click
+import copy
 import datetime
 import json
 import logging
@@ -221,18 +222,23 @@ class Moderator(object):
     logging.info("%s %s" % (prefix, email))
 
     try:
-      self.parser.parse(self.phase, email.sender, email.body)
       if isinstance(self.phase, mafia.Day):
+        old_votes = copy.copy(self.phase.votes)
+
+      self.parser.parse(self.phase, email.sender, email.body)
+      body = "Confirmed.\n\n> %s" % email.body
+      self.send_email(email.sender, email.subject, body)
+
+      if isinstance(self.phase, mafia.Day) and self.phase.votes != old_votes:
         voters = sorted([p for p in self.phase.votes.keys() if p and p.alive])
         votes = "\n".join(["  %s votes for %s." % (p, self.phase.votes[p]) for p in voters])
         body = "Current votes:\n%s" % votes
         self.send_email(mafia.events.PUBLIC, self.current_subject, body)
-      else:
-        body = "Confirmed.\n\n> %s" % email.body
-        self.send_email(email.sender, email.subject, body)
+
     except mafia.InvalidAction as e:
       body = "%s\n\n> %s" % (str(e), email.body)
       self.send_email(email.sender, email.subject, body)
+
     except mafia.HelpRequested:
       roles = self.game.log.to(email.sender).type(mafia.events.RoleAnnouncement)
       if len(roles) == 0:

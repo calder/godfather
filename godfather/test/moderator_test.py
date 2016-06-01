@@ -112,17 +112,23 @@ class ModeratorUnitTest(ModeratorTest):
       # Pass 4: Send in some vote emails.
       self.emails.append(Email(sender=self.sam, subject="My Vote", body="vote sauron\r\n-Sam"))
       self.emails.append(Email(sender=self.sauron, subject="Mafia", body="GRRRRRRRRR"))
+      self.emails.append(Email(sender=self.sauron, subject="Mafia", body="Set will:\n\nYou'll regret this!"))
       yield True
       self.assert_sent_emails([
+        call(self.sam, "My Vote", "Confirmed.\n\n> vote sauron\r\n-Sam"),
         call(events.PUBLIC, "LOTR Mafia: Day 1", "Current votes:\n  Samwise votes for Sauron."),
         call(self.sauron, "Mafia", "Invalid action.\n\n> GRRRRRRRRR"),
+        call(self.sauron, "Mafia", "Confirmed.\n\n> Set will:\n\nYou'll regret this!"),
       ])
 
       # Pass 5: Advance the clock so day resolves.
       self.advance_phase()
       yield True
       self.assert_sent_emails([
-        call(events.PUBLIC, "LOTR Mafia: Day 1", "Sauron, the <b>Mafia Godfather</b>, was lynched."),
+        call(events.PUBLIC, "LOTR Mafia: Day 1",
+             "Sauron, the <b>Mafia Godfather</b>, was lynched.\n\n  "
+             "<h2>The Last Will And Testament of Sauron</h2>\n  "
+             "You'll regret this!"),
         call(events.PUBLIC, "LOTR Mafia: The End", Glob("*Congratulations to Frodo, Gandalf and Samwise*")),
       ])
 
