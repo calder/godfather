@@ -8,10 +8,15 @@ import pickle
 import pluginbase
 import pytz
 import random
+import shutil
 import threading
 
 from .moderator import *
 from .server import *
+
+def relative_path(path):
+  """Create a path relative to this file."""
+  return os.path.join(os.path.dirname(__file__), path)
 
 @click.group()
 def main():
@@ -89,12 +94,22 @@ def init(game_dir):
     logging.info("%s already exists." % setup_path)
   else:
     logging.info("Creating %s..." % setup_path)
-    setup_template_path = os.path.join(os.path.dirname(__file__), "templates/setup.py")
+    setup_template_path = relative_path("templates/setup.py")
     setup_template = jinja2.Template(open(setup_template_path).read())
     open(setup_path, "w").write(setup_template.render(
       setup_seed=random.randint(0, 2**31),
       game_seed=random.randint(0, 2**31),
     ))
+
+  # Create patch.py file if it doesn't exist.
+  patch_path = os.path.join(game_dir, "patch.py")
+  logging.info("Checking for %s..." % patch_path)
+  if os.path.isfile(patch_path):
+    logging.info("%s already exists." % patch_path)
+  else:
+    logging.info("Creating %s..." % patch_path)
+    patch_template_path = relative_path("templates/patch.py")
+    shutil.copyfile(patch_template_path, patch_path)
 
 @standard_options()
 @click.option("--setup_only", is_flag=True,
@@ -181,8 +196,7 @@ def log(game_dir):
   logging.info("Reading log from %s..." % game_path)
   moderator = pickle.load(open(game_path, "rb"))
   if len(moderator.game.log) > 0:
-    for event in moderator.game.log:
-      print(event)
+    print(moderator.game.log)
 
 @standard_options()
 @click.option("--backup", type=str, required=True, help="The game file to restore.")

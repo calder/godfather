@@ -16,6 +16,7 @@ class InitTest(CliTest):
     exec_godfather(["init", self.game_dir])
     assert os.path.isdir(self.game_dir)
     assert os.path.isfile(os.path.join(self.game_dir, "setup.py"))
+    assert os.path.isfile(os.path.join(self.game_dir, "patch.py"))
 
   def test_game_dir_exists(self):
     """'init' should succeed even if the game directory already exists."""

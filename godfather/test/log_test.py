@@ -10,7 +10,7 @@ class LogTest(CliTest):
     exec_godfather(["run", "--setup_only", self.game_dir])
 
     moderator = pickle.load(open(self.game_path, "rb"))
-    moderator.game.log = ["Bananas"]
+    moderator.game.log = "Bananas"
     pickle.dump(moderator, open(self.game_path, "wb"))
 
     result = exec_godfather(["log", self.game_dir])

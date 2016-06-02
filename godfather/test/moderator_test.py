@@ -42,7 +42,7 @@ class ModeratorTest(CliTest):
     self.moderator.mailgun  = self.mocks.mailgun  = MagicMock()
     self.moderator.sleep    = self.mocks.sleep    = MagicMock()
 
-    self.moderator.get_time.return_value = datetime.datetime.now(pytz.UTC)
+    self.moderator.get_time.return_value = datetime.datetime.now(time_zone)
 
 class ModeratorUnitTest(ModeratorTest):
   """These tests mock out all of Moderator's "side effect" methods."""

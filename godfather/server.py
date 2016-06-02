@@ -29,7 +29,7 @@ def Server(moderator):
   def status():
     errors = []
     fetched = moderator.last_fetch
-    if fetched < datetime.datetime.now(pytz.UTC) - MAX_LATENCY:
+    if fetched < datetime.datetime.now(moderator.time_zone) - MAX_LATENCY:
       errors.append("Last email check: %s" % fetched.strftime("%I:%M %p"))
     status = 200 if len(errors) == 0 else 500
     return flask.render_template(
