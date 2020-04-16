@@ -22,26 +22,30 @@ echo MAILGUN_API_KEY > ~/.config/godfather/mailgun_key.txt
 
 Normal usage:
 ```sh
-# Create the game directory and a template setup.py.
-godfather init ~/mafia-game
+# Create game directory.
+mkdir my_game
+cd my_game
+
+# Create a template setup.py.
+godfather init
 
 # Edit setup.py to configure your game.
-nano ~/mafia-game/setup.py
+nano setup.py
 
 # Run the game. Game state is saved in game.pickle.
-godfather run ~/mafia-game
+godfather run
 ```
 
 Other commands:
 ```sh
 # View the game log so far.
-godfather log ~/mafia-game
+godfather log
 
 # Resolve the current phase immediately.
-godfather poke ~/mafia-game
+godfather resolve
 
 # Restore the game state from a backup.
-godfather restore ~/mafia-game --backup ~/mafia-game/backups/my_backup.pickle
+godfather restore --backup ~/mafia-game/backups/my_backup.pickle
 ```
 
 
