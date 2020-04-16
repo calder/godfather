@@ -1,6 +1,6 @@
-# Godfather
+# 🐴 Godfather
 
-A CLI for running games of [Mafia](http://wiki.mafiascum.net).
+A tool for running games of [Mafia](http://wiki.mafiascum.net) over email. Uses the [`mafia`](https://github.com/calder/) package as its resolver.
 
 
 ## Installing
