@@ -133,14 +133,14 @@ class Moderator(object):
     self.save_checkpoint("setup")
 
     logging.info("Starting game...")
-    welcome = render_email(
-                "welcome.html",
-                game_name=self.name,
-                night_end=self.night_end.strftime("%I:%M %p"),
-                day_end=self.day_end.strftime("%I:%M %p"),
-                players=self.game.players,
-              )
-    self.send_email(mafia.events.PUBLIC, "%s: Welcome" % self.name, welcome)
+    body = render_email(
+             "welcome.html",
+             game_name=self.name,
+             night_end=self.night_end.strftime("%I:%M %p"),
+             day_end=self.day_end.strftime("%I:%M %p"),
+             players=self.game.players,
+           )
+    self.send_email(mafia.events.PUBLIC, "%s: Welcome" % self.name, body)
     self.game.begin()
     self.started = True
 
@@ -164,11 +164,13 @@ class Moderator(object):
     self.phase_end = self.get_phase_end(start=self.get_time())
 
     if not self.game.is_game_over():
-      phase_end = self.phase_end.time().strftime("%I:%M %p")
-      players = "\n".join(["  " + p.name for p in self.game.players])
-      body = "%s is over. %s actions are due by %s.\n\n"\
-             "Remaining players:\n%s" % \
-             (last_phase, self.phase, phase_end, players)
+      body = render_email(
+               "end_of_phase.html",
+               last_phase=last_phase,
+               next_phase=self.phase,
+               phase_end=self.phase_end.time().strftime("%I:%M %p"),
+               players=self.game.players,
+             )
       self.send_email(mafia.events.PUBLIC, self.current_subject, body)
 
     self.save_checkpoint(str(self.phase).lower().replace(' ', '_'))

@@ -1,0 +1,6 @@
+{{ last_phase }} is over. {{ next_phase }} actions are due by {{ phase_end }}.
+
+<h2>Remaining players</h2>
+{% for player in players %}
+  <li>{{ player.name }} &lt;{{ player.info["email"] }}&gt;</li>
+{% endfor %}
