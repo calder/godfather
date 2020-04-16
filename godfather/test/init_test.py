@@ -9,29 +9,22 @@ from .cli_test import *
 class InitTest(CliTest):
 
   def test_create_game_dir(self):
-    """'init' should create the game directory if not present."""
-    os.rmdir(self.game_dir)
-    assert not os.path.isdir(self.game_dir)
-
-    exec_godfather(["init", self.game_dir])
-    assert os.path.isdir(self.game_dir)
-    assert os.path.isfile(os.path.join(self.game_dir, "setup.py"))
-    assert os.path.isfile(os.path.join(self.game_dir, "patch.py"))
+    """'init' should create setup and patch files."""
+    exec_godfather(["init"])
+    assert os.path.isfile("setup.py")
+    assert os.path.isfile("patch.py")
 
   def test_game_dir_exists(self):
     """'init' should succeed even if the game directory already exists."""
-    exec_godfather(["init", self.game_dir])
-    assert os.path.isfile(os.path.join(self.game_dir, "setup.py"))
+    exec_godfather(["init"])
+    assert os.path.isfile("setup.py")
 
   def test_setup_py(self):
     """'init' should create a valid setup.py."""
-    setup_path = os.path.join(self.game_dir, "setup.py")
-    game_path = os.path.join(self.game_dir, "game.pickle")
-
-    exec_godfather(["init", self.game_dir])
+    exec_godfather(["init"])
 
     plugin_base = pluginbase.PluginBase(package="plugins")
-    plugin_source = plugin_base.make_plugin_source(searchpath=[self.game_dir])
+    plugin_source = plugin_base.make_plugin_source(searchpath=["."])
     setup = plugin_source.load_plugin("setup")
     assert isinstance(setup.game, mafia.Game)
     assert isinstance(setup.night_end, datetime.time)
@@ -39,8 +32,7 @@ class InitTest(CliTest):
 
   def test_preexisting_setup_py(self):
     """'init' should not override setup.py if present."""
-    setup_path = os.path.join(self.game_dir, "setup.py")
-    open(setup_path, "w").write("foobar")
+    open("setup.py", "w").write("foobar")
 
-    exec_godfather(["init", self.game_dir])
-    self.assertEqual("foobar", open(setup_path).read())
+    exec_godfather(["init"])
+    self.assertEqual("foobar", open("setup.py").read())

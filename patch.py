@@ -5,11 +5,11 @@ import mafia
 import os
 import pickle
 
-os.chdir(os.path.dirname(__file__))
+game_dir = os.path.dirname(__file__)
 
-with godfather.Lock():
+with godfather.Lock(game_dir):
   # Load the game state.
-  game_file = "game.pickle"
+  game_file = os.path.join(game_dir, "game.pickle")
   moderator = pickle.load(open(game_file, "rb"))
   game = moderator.game
 

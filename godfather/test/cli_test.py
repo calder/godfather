@@ -34,15 +34,15 @@ class CliTest(GodfatherTest):
     super().setUp()
     clear_global_events()
     self.game_dir_tempfile = tempfile.TemporaryDirectory()
-    self.game_dir = self.game_dir_tempfile.name
+    os.chdir(self.game_dir_tempfile.name)
 
   @property
   def game_path(self):
-    return os.path.join(self.game_dir, "game.pickle")
+    return "game.pickle"
 
   @property
   def setup_path(self):
-    return os.path.join(self.game_dir, "setup.py")
+    return "setup.py"
 
 def exec(command):
   """Run a command and assert that it passes."""

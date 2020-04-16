@@ -26,6 +26,19 @@ import random
 
 from mafia import *
 
+# Helpers (do not edit)
+Player = collections.namedtuple("Player", ["name", "email"])
+player_index = 0
+def add_player(role):
+  global game, player_index, players
+  player = players[player_index]
+  player_index += 1
+  return game.add_player(player.name, role, info={"email": player.email})
+
+# Random seeds
+setup_seed = {{ setup_seed }}
+game_seed  = {{ game_seed }}
+
 # Basic game settings
 game_name      = "Crypto Mafia"
 moderator_name = "The Godfather"
@@ -35,19 +48,6 @@ private_cc     = []
 time_zone      = pytz.timezone("US/Pacific")
 night_end      = datetime.time(hour=10, minute=00, tzinfo=time_zone)
 day_end        = datetime.time(hour=12, minute=15, tzinfo=time_zone)
-
-# Random seeds
-setup_seed = {{ setup_seed }}
-game_seed  = {{ game_seed }}
-
-# Helpers (do not edit)
-Player = collections.namedtuple("Player", ["name", "email"])
-player_index = 0
-def add_player(role):
-  global game, player_index, players
-  player = players[player_index]
-  player_index += 1
-  return game.add_player(player.name, role, info={"email": player.email})
 
 # Player list
 players = [
