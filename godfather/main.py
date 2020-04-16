@@ -164,7 +164,7 @@ def run(setup_only):
   moderator.run()
 
 @standard_options()
-def poke():
+def resolve():
   """Resolve the current stage and exit."""
 
   moderator = load_game(GAME_PATH)
