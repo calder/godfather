@@ -56,9 +56,9 @@ Install dependencies:
 sudo pip3 install --upgrade callee click flask jinja2 mafia pluginbase pytest pytz requests termcolor
 ```
 
-Set up presubmit hooks:
+Install pre-commit hooks:
 ```sh
-scripts/install-git-hooks
+scripts/install_git_hooks.sh
 ```
 
 Run tests:

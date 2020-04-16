@@ -1,12 +1,12 @@
-#!/bin/sh
+#!/bin/sh -e
 
-cd "`dirname "$0"`"/..
+cd "$(dirname "$0")/.."
 
-RED=`tput setaf 1`
-GREEN=`tput setaf 2`
-RESET=`tput sgr0`
+RED="$(tput setaf 1)"
+GREEN="$(tput setaf 2)"
+RESET="$(tput sgr0)"
 
-py.test || exit 1
+pytest
 
 echo
 ! grep -r "print(" godfather/*.py \
