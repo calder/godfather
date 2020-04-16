@@ -32,7 +32,7 @@ moderator_name = "The Godfather"
 domain         = "YourMailgunDomain.com"
 public_cc      = []
 private_cc     = []
-time_zone      = pytz.timezone("US/Pacific-New")
+time_zone      = pytz.timezone("US/Pacific")
 night_end      = datetime.time(hour=10, minute=00, tzinfo=time_zone)
 day_end        = datetime.time(hour=12, minute=15, tzinfo=time_zone)
 

@@ -28,7 +28,7 @@ class ModeratorTest(CliTest):
                                         info={"email": "mithrandir@meu.edu"})
     self.sauron  = self.game.add_player("Sauron", Godfather(self.mafia),
                                         info={"email": "sauron@mordor.gov"})
-    time_zone = pytz.timezone("US/Pacific-New")
+    time_zone = pytz.timezone("US/Pacific")
     self.moderator = Moderator(path=self.game_path,
                                game=self.game,
                                game_name="LOTR Mafia",
