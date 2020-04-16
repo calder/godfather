@@ -7,14 +7,13 @@ A tool for running games of [Mafia](http://wiki.mafiascum.net) over email. Uses 
 
 Install Godfather:
 ```sh
-sudo apt-get install python3-pip
 sudo pip3 install --upgrade godfather
 ```
 
 Set up [Mailgun](https://www.mailgun.com), then install your Mailgun API key:
 ```sh
 mkdir -p ~/.config/godfather
-echo MAILGUN_API_KEY > ~/.config/godfather/mailgun_key.txt
+echo YOUR_MAILGUN_API_KEY > ~/.config/godfather/mailgun_key.txt
 ```
 
 

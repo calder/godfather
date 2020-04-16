@@ -3,7 +3,7 @@ from setuptools import *
 setup(
   # Metadata
   name="godfather",
-  version="0.7",
+  version="1.0.0",
   author="Calder Coalson",
   author_email="caldercoalson@gmail.com",
   url="https://github.com/calder/godfather",
