@@ -116,9 +116,9 @@ class Moderator(object):
 
   def save_checkpoint(self, name):
     """Save the current Moderator state to a checkpoint file."""
-    timestamp = datetime.datetime.now(self.time_zone).strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = datetime.datetime.now(self.time_zone).strftime("%Y-%m-%d_%H:%M:%S")
     backup_dir = os.path.join(os.path.dirname(self.path), "backups")
-    checkpoint_path = os.path.join(backup_dir, "game %s %s.pickle" % (timestamp, name))
+    checkpoint_path = os.path.join(backup_dir, "%s_%s.pickle" % (timestamp, name))
     pickle.dump(self, open(checkpoint_path, "wb"))
 
   def sleep(self):
@@ -130,7 +130,7 @@ class Moderator(object):
 
   def start(self):
     """Start the game and send out role emails."""
-    self.save_checkpoint("Setup")
+    self.save_checkpoint("setup")
 
     logging.info("Starting game...")
     welcome = render_email(
@@ -144,7 +144,7 @@ class Moderator(object):
     self.game.begin()
     self.started = True
 
-    self.save_checkpoint("Start")
+    self.save_checkpoint("start")
 
   def end(self):
     """End the game and send out congratulation emails."""
@@ -171,7 +171,7 @@ class Moderator(object):
              (last_phase, self.phase, phase_end, players)
       self.send_email(mafia.events.PUBLIC, self.current_subject, body)
 
-    self.save_checkpoint(str(self.phase))
+    self.save_checkpoint(str(self.phase).lower().replace(' ', '_'))
 
   def send_email(self, to, subject, body):
     """Send an email to a player, list of players, or everyone."""
