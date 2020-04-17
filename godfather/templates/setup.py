@@ -3,11 +3,6 @@
 It will be imported and the following variables read:
 
   game_name:      The name of the game as it appears in email subjects.
-  moderator_name: The name of the sender for all moderator emails.
-  domain:         The domain to send email from.
-
-  public_cc:      A list of emails to CC on all public emails.
-  private_cc:     A list of emails to CC on all emails.
 
   time_zone:      The time zone to report times in.
   night_end:      When night actions are resolved.
@@ -21,10 +16,14 @@ https://github.com/calder/mafia/blob/master/doc/roles.md
 
 import collections
 import datetime
+import os
 import pytz
 import random
+import uuid
 
 from mafia import *
+
+from godfather.api.forums.mailgun import Mailgun
 
 # Helpers (do not edit)
 Player = collections.namedtuple("Player", ["name", "email"])
@@ -35,16 +34,22 @@ def add_player(role):
   player_index += 1
   return game.add_player(player.name, role, info={"email": player.email})
 
+# Forum
+forum = Mailgun(
+  api_key=open(os.path.expanduser("~/.config/godfather/mailgun_key.txt")).read().strip(),
+  sender="The Godfather",
+  address=str(uuid.uuid4()),
+  domain="caldercoalson.com",
+  public_cc=[],
+  private_cc=[],
+)
+
 # Random seeds
 setup_seed = {{ setup_seed }}
 game_seed  = {{ game_seed }}
 
 # Basic game settings
 game_name      = "Crypto Mafia"
-moderator_name = "The Godfather"
-domain         = "YourMailgunDomain.com"
-public_cc      = []
-private_cc     = []
 time_zone      = pytz.timezone("US/Pacific")
 night_end      = datetime.time(hour=10, minute=00, tzinfo=time_zone)
 day_end        = datetime.time(hour=12, minute=15, tzinfo=time_zone)

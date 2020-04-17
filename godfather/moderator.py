@@ -13,13 +13,8 @@ import sys
 import time
 import uuid
 
-from .emails import *
-from .mailgun import *
-
-# Mailgun does not guarantee that received messages will be immediately
-# visible via their API. If we check at 12:00:30, we should only assume
-# that messages up to 12:00:00 are already available.
-MAIL_DELIVERY_LAG = datetime.timedelta(seconds=30)
+from godfather.api.message import Message
+from godfather.messages import *
 
 cancelled = False
 
@@ -34,11 +29,14 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 class Moderator(object):
-  def __init__(self, *, path, game,
-               game_name, moderator_name,
-               public_cc=None, private_cc=None,
-               time_zone, night_end, day_end,
-               domain, mailgun_key):
+  def __init__(self, *,
+               path,
+               game,
+               game_name,
+               time_zone,
+               night_end,
+               day_end,
+               forum):
     assert day_end.tzinfo == time_zone
     assert night_end.tzinfo == time_zone
 
@@ -46,22 +44,14 @@ class Moderator(object):
     self.game        = game
     self.name        = game_name
 
-    self.public_cc   = public_cc or []
-    self.private_cc  = private_cc or []
-
     self.time_zone   = time_zone
     self.night_end   = night_end
     self.day_end     = day_end
 
     self.started     = False
-    self.players     = {p.info["email"]: p for p in game.all_players}
     self.phase       = mafia.Night(0)
     self.phase_end   = self.get_phase_end(start=self.get_time())
-    self.last_fetch  = self.get_time()
-    self.mailgun     = Mailgun(api_key=mailgun_key,
-                               sender=moderator_name,
-                               address=str(uuid.uuid4()),
-                               domain=domain)
+    self.forum       = forum
     self.parser      = mafia.Parser(self.game)
 
     self.game.log.on_append(self.event_logged)
@@ -95,10 +85,10 @@ class Moderator(object):
       self.save()
 
     while True:
-      for email in self.get_emails():
-        self.email_received(email)
+      for message in self.forum.get_messages(self.game, self.phase_end):
+        self.message_received(message)
 
-      if self.get_time() > self.phase_end + MAIL_DELIVERY_LAG:
+      if self.get_time() > self.phase_end + self.forum.receipt_lag:
         self.advance_phase()
 
       self.save()
@@ -129,32 +119,32 @@ class Moderator(object):
     return True
 
   def start(self):
-    """Start the game and send out role emails."""
+    """Start the game and send out role messages."""
     self.save_checkpoint("setup")
 
     logging.info("Starting game...")
-    body = render_email(
+    body = render_message(
              "welcome.html",
              game_name=self.name,
              night_end=self.night_end.strftime("%I:%M %p"),
              day_end=self.day_end.strftime("%I:%M %p"),
              players=self.game.players,
            )
-    self.send_email(mafia.events.PUBLIC, "%s: Welcome" % self.name, body)
+    self.send_message(mafia.events.PUBLIC, "%s: Start" % self.name, body)
     self.game.begin()
     self.started = True
 
     self.save_checkpoint("start")
 
   def end(self):
-    """End the game and send out congratulation emails."""
+    """End the game and send out congratulation messages."""
     winners = mafia.str_player_list(self.game.winners())
     logging.info("Game over! Winners: %s" % winners)
 
     subject = "%s: The End" % self.name
     body = "Game over!\n\nCongratulations to %s for a well " \
            "(or poorly; I can't tell) played game!" % winners
-    self.send_email(mafia.events.PUBLIC, subject, body)
+    self.send_message(mafia.events.PUBLIC, subject, body)
 
   def advance_phase(self):
     """Resolve the current phase and start the next one."""
@@ -164,51 +154,20 @@ class Moderator(object):
     self.phase_end = self.get_phase_end(start=self.get_time())
 
     if not self.game.is_game_over():
-      body = render_email(
+      body = render_message(
                "end_of_phase.html",
                last_phase=last_phase,
                next_phase=self.phase,
                phase_end=self.phase_end.time().strftime("%I:%M %p"),
                players=self.game.players,
              )
-      self.send_email(mafia.events.PUBLIC, self.current_subject, body)
+      self.send_message(mafia.events.PUBLIC, self.current_subject, body)
 
     self.save_checkpoint(str(self.phase).lower().replace(' ', '_'))
 
-  def send_email(self, to, subject, body):
-    """Send an email to a player, list of players, or everyone."""
-    cc = self.private_cc
-    assert to
-    if to == mafia.events.PUBLIC:
-      to = self.game.all_players
-      cc = cc + self.public_cc
-    if not isinstance(to, list):
-      to = [to]
-    recipients = ["%s <%s>" % (p.name, p.info["email"]) for p in to]
-
-    self.mailgun.send_email(Email(recipients=recipients, cc=cc, subject=subject, body=body))
-
-  def get_emails(self):
-    """Return a list of emails received since the last check."""
-    cutoff = self.get_time() - MAIL_DELIVERY_LAG
-    cutoff = min(cutoff, self.phase_end)
-
-    messages = []
-    for email in self.mailgun.get_emails(self.last_fetch, cutoff):
-      sender = email.sender.lower()
-      if sender in self.players:
-        messages.append(Email(sender=self.players[sender],
-                              subject=email.subject,
-                              body=email.body))
-      else:
-        logging.info("Discarding message from non-player '%s'." % sender)
-        self.mailgun.send_email(Email(
-          recipients=[email.sender],
-          subject=email.subject,
-          body="Unrecognized player: '%s'." % sender))
-
-    self.last_fetch = cutoff
-    return messages
+  def send_message(self, to, subject, body):
+    """Send a message to a player, list of players, or everyone."""
+    self.forum.send_message(self.game, Message(to=to, subject=subject, body=body))
 
   def event_logged(self, event):
     """Called when an event is added to the game log."""
@@ -216,9 +175,9 @@ class Moderator(object):
     logging.info("%s %s" % (prefix, event.colored_str()))
     if event.to:
       subject = "%s: %s" % (self.name, event.phase)
-      self.send_email(event.to, subject, event_email(event, parser=self.parser))
+      self.send_message(event.to, subject, event_email(event, parser=self.parser))
 
-  def email_received(self, email):
+  def message_received(self, email):
     """Called when an email is received from a player."""
     prefix = termcolor.colored("◀◀◀", "yellow")
     logging.info("%s %s" % (prefix, email))
@@ -229,17 +188,17 @@ class Moderator(object):
 
       self.parser.parse(self.phase, email.sender, email.body)
       body = "Confirmed.\n\n> %s" % email.body
-      self.send_email(email.sender, email.subject, body)
+      self.send_message(email.sender, email.subject, body)
 
       if isinstance(self.phase, mafia.Day) and self.phase.votes != old_votes:
         voters = sorted([p for p in self.phase.votes.keys() if p and p.alive])
         votes = "\n".join(["  %s votes for %s." % (p, self.phase.votes[p]) for p in voters])
         body = "Current votes:\n%s" % votes
-        self.send_email(mafia.events.PUBLIC, self.current_subject, body)
+        self.send_message(mafia.events.PUBLIC, self.current_subject, body)
 
     except mafia.InvalidAction as e:
       body = "%s\n\n> %s" % (str(e), email.body)
-      self.send_email(email.sender, email.subject, body)
+      self.send_message(email.sender, email.subject, body)
 
     except mafia.HelpRequested:
       roles = self.game.log.to(email.sender).type(mafia.events.RoleAnnouncement)
@@ -247,7 +206,7 @@ class Moderator(object):
         logging.warning("Could not find role announcement for player: %s" % email.sender)
       else:
         body = event_email(roles[-1], parser=self.parser)
-        self.send_email(email.sender, email.subject, body)
+        self.send_message(email.sender, email.subject, body)
 
   @property
   def current_subject(self):

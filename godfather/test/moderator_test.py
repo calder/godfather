@@ -12,35 +12,39 @@ from unittest.mock import ANY, call, MagicMock
 
 from ..moderator import *
 
+class MockForum(MagicMock):
+  @property
+  def receipt_lag(self):
+    return datetime.timedelta(seconds=30)
+
+
 class ModeratorTest(CliTest):
   def setUp(self):
     super().setUp()
-    self.mocks   = MagicMock()
+    self.forum = MockForum()
     self.game    = Game()
     self.town    = self.game.add_faction(Town())
     self.masons  = self.game.add_faction(Masonry("The Fellowship", self.town))
     self.mafia   = self.game.add_faction(Mafia("The Forces of Darkness"))
     self.frodo   = self.game.add_player("Frodo", Villager(self.masons),
-                                        info={"email": "frodo@bagend.shire"})
+                                        info={"message": "frodo@bagend.shire"})
     self.sam     = self.game.add_player("Samwise", Villager(self.masons),
-                                        info={"email": "sam@samsgardening.com"})
+                                        info={"message": "sam@samsgardening.com"})
     self.gandalf = self.game.add_player("Gandalf", Cop(self.town),
-                                        info={"email": "mithrandir@meu.edu"})
+                                        info={"message": "mithrandir@meu.edu"})
     self.sauron  = self.game.add_player("Sauron", Godfather(self.mafia),
-                                        info={"email": "sauron@mordor.gov"})
+                                        info={"message": "sauron@mordor.gov"})
     time_zone = pytz.timezone("US/Pacific")
     self.moderator = Moderator(path=self.game_path,
                                game=self.game,
                                game_name="LOTR Mafia",
-                               moderator_name="The Ghost of J.R.R. Tolkien",
-                               domain="exeter.ox.ac.uk",
                                time_zone=time_zone,
                                night_end=datetime.time(hour=10, tzinfo=time_zone),
                                day_end=datetime.time(hour=22, tzinfo=time_zone),
-                               mailgun_key="Fake Key")
-    self.moderator.get_time = self.mocks.get_time = MagicMock()
-    self.moderator.mailgun  = self.mocks.mailgun  = MagicMock()
-    self.moderator.sleep    = self.mocks.sleep    = MagicMock()
+                               forum=self.forum)
+    self.moderator.forum    = self.forum
+    self.moderator.get_time = MagicMock()
+    self.moderator.sleep    = MagicMock()
 
     self.moderator.get_time.return_value = datetime.datetime.now(time_zone)
 
@@ -49,33 +53,33 @@ class ModeratorUnitTest(ModeratorTest):
 
   def setUp(self):
     super().setUp()
-    self.emails = []
-    self.moderator.save            = self.mocks.save            = MagicMock()
-    self.moderator.save_checkpoint = self.mocks.save_checkpoint = MagicMock()
-    self.moderator.send_email      = self.mocks.send_email      = MagicMock()
-    self.moderator.get_emails      = self.mocks.get_emails      = MagicMock()
-    self.moderator.get_emails.side_effect = self.get_and_clear_emails
+    self.messages = []
+    self.moderator.save                 = MagicMock()
+    self.moderator.save_checkpoint      = MagicMock()
+    self.moderator.send_message         = MagicMock()
+    self.forum.get_messages             = MagicMock()
+    self.forum.get_messages.side_effect = self.get_and_clear_messages
 
-  def get_and_clear_emails(self):
-    emails = self.emails
-    self.emails = []
-    return emails
+  def get_and_clear_messages(self, game, cutoff):
+    messages = self.messages
+    self.messages = []
+    return messages
 
-  def assert_sent_emails(self, calls):
-    assert_equal(self.moderator.send_email.mock_calls, calls)
-    self.moderator.send_email.reset_mock()
+  def assert_sent_messages(self, calls):
+    assert_equal(self.moderator.send_message.mock_calls, calls)
+    self.moderator.send_message.reset_mock()
 
   def advance_phase(self):
     self.moderator.get_time.return_value = self.moderator.phase_end + \
-                                           MAIL_DELIVERY_LAG + \
+                                           self.forum.receipt_lag + \
                                            datetime.timedelta(seconds=1)
 
   def test_simple_game(self):
     def logic():
-      # Pass 1: Role and faction emails should be sent.
+      # Pass 1: Role and faction messages should be sent.
       subject = "LOTR Mafia: Start"
-      self.assert_sent_emails([
-        call(events.PUBLIC, "LOTR Mafia: Welcome", StartsWith("Welcome to <b>LOTR Mafia</b>.")),
+      self.assert_sent_messages([
+        call(events.PUBLIC, "LOTR Mafia: Start", StartsWith("Welcome to <b>LOTR Mafia</b>.")),
         call([self.frodo],   subject, StartsWith("You are the <b>Mason Villager</b>.")),
         call([self.gandalf], subject, StartsWith("You are the <b>Town Cop</b>.")),
         call([self.sam],     subject, StartsWith("You are the <b>Mason Villager</b>.")),
@@ -86,17 +90,17 @@ class ModeratorUnitTest(ModeratorTest):
       assert self.moderator.started
 
       # Pass 1.5: Sauron is confused.
-      self.emails.append(Email(sender=self.sauron, subject="???", body="Help me!"))
+      self.messages.append(Message(sender=self.sauron, subject="???", body="Help me!"))
       yield True
-      self.assert_sent_emails([
+      self.assert_sent_messages([
         call(self.sauron, "???", Glob("*sauron: kill PLAYER*")),
       ])
 
-      # Pass 2: Send in some action emails.
-      self.emails.append(Email(sender=self.sam, subject="Mafia", body="Protect Frodo!"))
-      self.emails.append(Email(sender=self.sauron, subject="Mafia", body="Sauron: Kill Frodo."))
+      # Pass 2: Send in some action messages.
+      self.messages.append(Message(sender=self.sam, subject="Mafia", body="Protect Frodo!"))
+      self.messages.append(Message(sender=self.sauron, subject="Mafia", body="Sauron: Kill Frodo."))
       yield True
-      self.assert_sent_emails([
+      self.assert_sent_messages([
         call(self.sam, "Mafia", "Invalid action.\n\n> Protect Frodo!"),
         call(self.sauron, "Mafia", "Confirmed.\n\n> Sauron: Kill Frodo."),
       ])
@@ -104,17 +108,17 @@ class ModeratorUnitTest(ModeratorTest):
       # Pass 3: Advance the clock so night resolves.
       self.advance_phase()
       yield True
-      self.assert_sent_emails([
+      self.assert_sent_messages([
         call(events.PUBLIC, "LOTR Mafia: Night 0", "Frodo, the <b>Mason Villager</b>, has died."),
         call(events.PUBLIC, "LOTR Mafia: Day 1", StartsWith("Night 0 is over. Day 1 actions are due by 10:00 PM.")),
       ])
 
-      # Pass 4: Send in some vote emails.
-      self.emails.append(Email(sender=self.sam, subject="My Vote", body="vote sauron\r\n-Sam"))
-      self.emails.append(Email(sender=self.sauron, subject="Mafia", body="GRRRRRRRRR"))
-      self.emails.append(Email(sender=self.sauron, subject="Mafia", body="Set will:\n\nYou'll regret this!"))
+      # Pass 4: Send in some vote messages.
+      self.messages.append(Message(sender=self.sam, subject="My Vote", body="vote sauron\r\n-Sam"))
+      self.messages.append(Message(sender=self.sauron, subject="Mafia", body="GRRRRRRRRR"))
+      self.messages.append(Message(sender=self.sauron, subject="Mafia", body="Set will:\n\nYou'll regret this!"))
       yield True
-      self.assert_sent_emails([
+      self.assert_sent_messages([
         call(self.sam, "My Vote", "Confirmed.\n\n> vote sauron\r\n-Sam"),
         call(events.PUBLIC, "LOTR Mafia: Day 1", "Current votes:\n  Samwise votes for Sauron."),
         call(self.sauron, "Mafia", "Invalid action.\n\n> GRRRRRRRRR"),
@@ -124,7 +128,7 @@ class ModeratorUnitTest(ModeratorTest):
       # Pass 5: Advance the clock so day resolves.
       self.advance_phase()
       yield True
-      self.assert_sent_emails([
+      self.assert_sent_messages([
         call(events.PUBLIC, "LOTR Mafia: Day 1",
              "Sauron, the <b>Mafia Godfather</b>, was lynched.\n\n  "
              "<h2>The Last Will And Testament of Sauron</h2>\n  "
@@ -162,8 +166,8 @@ class ModeratorUnitTest(ModeratorTest):
 class ModeratorSaveTest(ModeratorTest):
   """Test save and save_checkpoint."""
 
-class ModeratorEmailTest(ModeratorTest):
-  """Test get_emails and send_emails with a mocked out Mailgun object."""
+class ModeratorMessageTest(ModeratorTest):
+  """Test get_messages and send_messages with a mocked out forum object."""
 
   def setUp(self):
     super().setUp()
@@ -171,62 +175,4 @@ class ModeratorEmailTest(ModeratorTest):
     self.moderator.private_cc = ["private@gmail.com"]
 
   def address(self, player):
-    return "%s <%s>" % (player.name, player.info["email"])
-
-  def test_send_public_email(self):
-    self.moderator.send_email(events.PUBLIC, "Test", "Test body.")
-    assert_equal(self.moderator.mailgun.mock_calls, [
-      call.send_email(Email(
-        recipients=[self.address(p) for p in self.game.players],
-        cc=["private@gmail.com", "public@gmail.com"],
-        subject="Test",
-        body="Test body.")
-      )
-    ])
-
-  def test_send_private_email(self):
-    self.moderator.send_email(self.sam, "Test", "Test body.")
-    assert_equal(self.moderator.mailgun.mock_calls, [
-      call.send_email(Email(
-        recipients=[self.address(self.sam)],
-        cc=["private@gmail.com"],
-        subject="Test",
-        body="Test body.")
-      )
-    ])
-
-  def test_send_group_email(self):
-    self.moderator.send_email([self.sam, self.frodo], "Test", "Test body.")
-    assert_equal(self.moderator.mailgun.mock_calls, [
-      call.send_email(Email(
-        recipients=[self.address(self.sam), self.address(self.frodo)],
-        cc=["private@gmail.com"],
-        subject="Test",
-        body="Test body.",
-      ))
-    ])
-
-  def test_get_emails(self):
-    now = datetime.datetime(year=2001, month=1, day=1, hour=1, tzinfo=pytz.UTC)
-    self.moderator.last_fetch = now - datetime.timedelta(days=1)
-    self.moderator.get_time.return_value = now
-    emails = self.moderator.get_emails()
-    assert_equal(emails, [])
-    assert_equal(self.moderator.last_fetch, now - MAIL_DELIVERY_LAG)
-
-    self.moderator.mailgun.get_emails.return_value = [
-      Email(sender="frodo@bagend.shire",    subject="1", body="Body 1"),
-      Email(sender="sam@samsgardening.com", subject="2", body="Body 2"),
-      Email(sender="saruman@orthanc.me",    subject="3", body="Body 3"),
-    ]
-    emails = self.moderator.get_emails()
-    assert_equal(emails, [
-      Email(sender=self.frodo, subject="1", body="Body 1"),
-      Email(sender=self.sam,   subject="2", body="Body 2"),
-    ])
-    self.moderator.mailgun.send_email.assert_called_with(Email(
-      recipients=["saruman@orthanc.me"],
-      subject="3",
-      body="Unrecognized player: 'saruman@orthanc.me'.",
-    ))
-    assert_equal(self.moderator.last_fetch, now - MAIL_DELIVERY_LAG)
+    return "%s <%s>" % (player.name, player.info["message"])

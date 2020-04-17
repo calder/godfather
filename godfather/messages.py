@@ -3,8 +3,8 @@ import jinja2
 import mafia
 import os
 
-def render_email(template, **kwargs):
-  env = jinja2.Environment(loader=jinja2.PackageLoader("godfather", "emails"),
+def render_message(template, **kwargs):
+  env = jinja2.Environment(loader=jinja2.PackageLoader("godfather", "messages"),
                            trim_blocks=True, lstrip_blocks=True)
   template = env.get_template(template)
   return template.render(**kwargs).strip()
@@ -19,7 +19,7 @@ def _(event, *, parser):
   abilities = player.role.descriptions
   commands = parser.get_help(player)
   objective = player.role.objective
-  return render_email(
+  return render_message(
     "role_announcement.html",
     initial=(event.phase == mafia.START),
     role=event.role,
@@ -29,7 +29,7 @@ def _(event, *, parser):
   )
 
 def render_death_email(event, *, description):
-  return render_email(
+  return render_message(
     "died.html",
     description=description,
     player=event.player,

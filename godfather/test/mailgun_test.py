@@ -10,7 +10,7 @@ import uuid
 from mafia import assert_equal
 from unittest.mock import call, MagicMock
 
-from ..mailgun import *
+from godfather.api.forums.mailgun import *
 
 class MailgunTest(unittest.TestCase):
 

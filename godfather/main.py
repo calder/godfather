@@ -14,8 +14,9 @@ import threading
 from .moderator import *
 from .server import *
 
-GAME_PATH  = "game.pickle"
-SETUP_PATH = "setup.py"
+BACKUP_PATH = "backups/"
+GAME_PATH   = "game.pickle"
+SETUP_PATH  = "setup.py"
 
 def relative_path(path):
   """Create a path relative to this file."""
@@ -108,70 +109,12 @@ def init():
               help="Create the game.pickle file without running anything.")
 def run(setup_only):
   """Run the game to completion or ctrl-c, saving checkpoints regularly."""
-
-  # Get Mailgun key.
-  mailgun_key_path = os.path.expanduser("~/.config/godfather/mailgun_key.txt")
-  logging.info("Checking for %s..." % mailgun_key_path)
-  if (os.path.isfile(mailgun_key_path)):
-    logging.info("Loading %s..." % mailgun_key_path)
-    mailgun_key = open(mailgun_key_path).read().strip()
-  else:
-    raise click.ClickException("Must create %s." % mailgun_key_path)
-
-  # Create backup directory if it doesn't exist.
-  backup_dir = "backups"
-  logging.info("Creating %s..." % backup_dir)
-  os.makedirs(backup_dir, exist_ok=True)
-
-  # Create game.pickle if it doesn't exist.
-  logging.info("Checking for %s..." % GAME_PATH)
-  if os.path.isfile(GAME_PATH):
-    logging.info("%s already exists." % GAME_PATH)
-  else:
-    logging.info("Loading %s..." % SETUP_PATH)
-    plugin_base = pluginbase.PluginBase(package="plugins")
-    plugin_source = plugin_base.make_plugin_source(searchpath=["."])
-    setup = plugin_source.load_plugin("setup")
-    if not isinstance(setup.game, mafia.Game):
-      raise click.ClickException("'game' in %s is not a mafia.Game object." % SETUP_PATH)
-
-    logging.info("Creating %s..." % GAME_PATH)
-    moderator = Moderator(path=GAME_PATH,
-                          game=setup.game,
-                          game_name=setup.game_name,
-                          moderator_name=setup.moderator_name,
-                          domain=setup.domain,
-                          public_cc=setup.public_cc,
-                          private_cc=setup.private_cc,
-                          time_zone=setup.time_zone,
-                          night_end=setup.night_end,
-                          day_end=setup.day_end,
-                          mailgun_key=mailgun_key)
-    pickle.dump(moderator, open(GAME_PATH, "wb"))
-
-  # Load the moderator.
-  moderator = load_game(GAME_PATH)
-
-  if setup_only:
-    return
-
-  # Start the server.
-  server = Server(moderator)
-  server_thread = threading.Thread(target=server.run, daemon=True)
-  server_thread.start()
-
-  # Run the Moderator (runs until interrupted).
-  moderator.run()
+  run_game(setup_only=setup_only)
 
 @standard_options()
 def resolve():
   """Resolve the current stage and exit."""
-
-  moderator = load_game(GAME_PATH)
-
-  moderator.phase_end = datetime.datetime.now(moderator.time_zone) - MAIL_DELIVERY_LAG
-  set_cancelled(True)
-  moderator.run()
+  run_game(resolve_one_phase=True)
 
 @standard_options(lock_required=False)
 def log():
@@ -193,3 +136,49 @@ def restore(backup):
 
   moderator = load_game(GAME_PATH, load_from=backup)
   moderator.save()
+
+def run_game(setup_only=False, resolve_one_phase=False):
+  # Create backup directory if it doesn't exist.
+  logging.info("Creating %s..." % BACKUP_PATH)
+  os.makedirs(BACKUP_PATH, exist_ok=True)
+
+  # Create game.pickle if it doesn't exist.
+  logging.info("Checking for %s..." % GAME_PATH)
+  if os.path.isfile(GAME_PATH):
+    logging.info("%s already exists." % GAME_PATH)
+  else:
+    logging.info("Loading %s..." % SETUP_PATH)
+    plugin_base = pluginbase.PluginBase(package="plugins")
+    plugin_source = plugin_base.make_plugin_source(searchpath=["."])
+    setup = plugin_source.load_plugin("setup")
+    if not isinstance(setup.game, mafia.Game):
+      raise click.ClickException("'game' in %s is not a mafia.Game object." % SETUP_PATH)
+
+    logging.info("Creating %s..." % GAME_PATH)
+    moderator = Moderator(path=GAME_PATH,
+                          game=setup.game,
+                          game_name=setup.game_name,
+                          time_zone=setup.time_zone,
+                          night_end=setup.night_end,
+                          day_end=setup.day_end,
+                          forum=setup.forum)
+    pickle.dump(moderator, open(GAME_PATH, "wb"))
+
+  # Load the moderator.
+  moderator = load_game(GAME_PATH)
+
+  if setup_only:
+    return
+
+  if resolve_one_phase:
+    # Resolve the next phase and exit.
+    moderator.phase_end = datetime.datetime.now(moderator.time_zone) - moderator.forum.receipt_lag
+    set_cancelled(True)
+  else:
+    # Start the server.
+    server = Server(moderator)
+    server_thread = threading.Thread(target=server.run, daemon=True)
+    server_thread.start()
+
+  # Run the Moderator (runs until interrupted).
+  moderator.run()
